@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portfolio</title>
+  <meta name="description" content="Web Design Engineer — selected work.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ───────── RESET & BASE ───────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:    #0a0a0b;
+      --fg:    #e8e6e3;
+      --muted: #6b6b6b;
+      --accent-1: #c084fc;   /* soft violet */
+      --accent-2: #38bdf8;   /* sky blue */
+      --accent-3: #fb923c;   /* warm amber */
+      --radius: 16px;
+      --ease: cubic-bezier(.22, 1, .36, 1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 300;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection { background: rgba(192, 132, 252, .3); }
+
+    /* ───────── NOISE TEXTURE ───────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 9999;
+      pointer-events: none;
+      opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
+    }
+
+    /* ───────── GRADIENT ORB (ambient bg) ───────── */
+    .orb {
+      position: fixed;
+      width: 60vw; height: 60vw;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: .12;
+      pointer-events: none;
+      z-index: 0;
+      transition: transform 8s var(--ease);
+    }
+    .orb--1 {
+      top: -20%; left: -15%;
+      background: radial-gradient(circle, var(--accent-1), transparent 70%);
+      animation: drift1 22s ease-in-out infinite alternate;
+    }
+    .orb--2 {
+      bottom: -25%; right: -20%;
+      background: radial-gradient(circle, var(--accent-2), transparent 70%);
+      animation: drift2 26s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { to { transform: translate(10vw, 15vh); } }
+    @keyframes drift2 { to { transform: translate(-12vw, -10vh); } }
+
+    /* ───────── LAYOUT ───────── */
+    .page {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 clamp(20px, 5vw, 64px);
+    }
+
+    /* ───────── HEADER ───────── */
+    header {
+      padding: clamp(48px, 12vh, 160px) 0 clamp(32px, 6vh, 80px);
+    }
+    header .label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 24px;
+    }
+    header h1 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      font-size: clamp(2.4rem, 5.5vw, 4.8rem);
+      line-height: 1.1;
+      letter-spacing: -.02em;
+    }
+    header h1 em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    header .sub {
+      margin-top: 20px;
+      font-size: clamp(.9rem, 1.4vw, 1.05rem);
+      color: var(--muted);
+      max-width: 42ch;
+      line-height: 1.6;
+    }
+
+    /* ───────── SECTION LABELS ───────── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 40px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+
+    /* ───────── PROJECT CARDS ───────── */
+    .projects { display: flex; flex-direction: column; gap: 28px; }
+
+    .card {
+      position: relative;
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+      transition: transform .55s var(--ease),
+                  border-color .4s,
+                  box-shadow .5s var(--ease);
+      cursor: pointer;
+    }
+    .card:hover {
+      transform: translateY(-4px) scale(1.005);
+      border-color: rgba(255,255,255,.12);
+      box-shadow: 0 32px 80px -20px rgba(0,0,0,.5),
+                  inset 0 1px 0 rgba(255,255,255,.06);
+    }
+
+    /* Spotlight glow that follows the mouse */
+    .card::before {
+      content: '';
+      position: absolute; inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(700px circle at var(--mx, 50%) var(--my, 50%),
+        rgba(192, 132, 252, .07), transparent 40%);
+      opacity: 0;
+      transition: opacity .45s;
+      pointer-events: none;
+      z-index: 2;
+    }
+    .card:hover::before { opacity: 1; }
+
+    /* Iframe preview */
+    .card__preview {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: #111;
+    }
+    .card__preview iframe {
+      position: absolute;
+      top: 0; left: 0;
+      width: 200%;
+      height: 200%;
+      transform: scale(.5);
+      transform-origin: top left;
+      border: none;
+      pointer-events: none;
+      filter: brightness(.92) saturate(.95);
+      transition: filter .6s var(--ease), transform .8s var(--ease);
+    }
+    .card:hover .card__preview iframe {
+      filter: brightness(1) saturate(1);
+    }
+
+    /* Gradient shimmer strip on hover */
+    .card__preview::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, transparent 40%, rgba(192,132,252,.08) 50%, transparent 60%);
+      background-size: 250% 250%;
+      opacity: 0;
+      transition: opacity .5s;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .card:hover .card__preview::after {
+      opacity: 1;
+      animation: shimmerMove 2.5s ease-in-out infinite;
+    }
+    @keyframes shimmerMove {
+      0%   { background-position: 200% 200%; }
+      100% { background-position: -50% -50%; }
+    }
+
+    /* Card body */
+    .card__body {
+      padding: 24px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      z-index: 2;
+    }
+    .card__info h3 {
+      font-weight: 400;
+      font-size: 1.05rem;
+      letter-spacing: -.01em;
+    }
+    .card__info .tag {
+      font-size: .75rem;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: .03em;
+    }
+    .card__arrow {
+      width: 20px; height: 20px;
+      color: var(--muted);
+      transition: color .3s, transform .4s var(--ease);
+      flex-shrink: 0;
+    }
+    .card:hover .card__arrow {
+      color: var(--fg);
+      transform: translate(3px, -3px);
+    }
+
+    /* ───────── SEPARATOR ───────── */
+    .separator {
+      margin: 56px 0 48px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+    .separator::before, .separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
+    }
+
+    /* ───────── FREELANCE CARD (smaller, distinct) ───────── */
+    .freelance-card {
+      max-width: 640px;
+    }
+    .freelance-card .card__preview {
+      aspect-ratio: 16 / 10;
+    }
+
+    /* ───────── FOOTER ───────── */
+    footer {
+      margin-top: clamp(80px, 14vh, 160px);
+      padding: 40px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255,255,255,.06);
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    footer a {
+      color: var(--fg);
+      text-decoration: none;
+      transition: color .3s;
+    }
+    footer a:hover { color: var(--accent-1); }
+
+    /* ───────── REVEAL ANIMATION ───────── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity .8s var(--ease), transform .8s var(--ease);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ───────── RESPONSIVE ───────── */
+    @media (max-width: 640px) {
+      .card__body { padding: 18px 20px; }
+      footer { flex-direction: column; gap: 12px; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient gradient orbs -->
+  <div class="orb orb--1"></div>
+  <div class="orb orb--2"></div>
+
+  <div class="page">
+
+    <!-- ─── HEADER ─── -->
+    <header>
+      <span class="label reveal">Selected work</span>
+      <h1 class="reveal">Web Design<br><em>Engineer</em></h1>
+      <p class="sub reveal">Crafting digital experiences — from concept to code.</p>
+    </header>
+
+    <!-- ─── PROFESSIONAL WORK ─── -->
+    <section>
+      <p class="section-label reveal">Professional · DuTACS</p>
+      <div class="projects">
+
+        <a class="card reveal" href="https://dutacs.de" target="_blank" rel="noopener">
+          <div class="card__preview">
+            <iframe src="https://dutacs.de" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutacs.de preview"></iframe>
+          </div>
+          <div class="card__body">
+            <div class="card__info">
+              <h3>dutacs.de</h3>
+              <p class="tag">Corporate travel management — IATA-certified TMC</p>
+            </div>
+            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+          </div>
+        </a>
+
+        <a class="card reveal" href="https://fivebaysresort.com" target="_blank" rel="noopener">
+          <div class="card__preview">
+            <iframe src="https://fivebaysresort.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="fivebaysresort.com preview"></iframe>
+          </div>
+          <div class="card__body">
+            <div class="card__info">
+              <h3>fivebaysresort.com</h3>
+              <p class="tag">Luxury resort — Mediterranean timeshare destination</p>
+            </div>
+            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+          </div>
+        </a>
+
+        <a class="card reveal" href="https://dutechub.com" target="_blank" rel="noopener">
+          <div class="card__preview">
+            <iframe src="https://dutechub.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutechub.com preview"></iframe>
+          </div>
+          <div class="card__body">
+            <div class="card__info">
+              <h3>dutechub.com</h3>
+              <p class="tag">Cross-regional tech community hub</p>
+            </div>
+            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+          </div>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ─── SEPARATOR ─── -->
+    <div class="separator reveal">Freelance</div>
+
+    <!-- ─── FREELANCE ─── -->
+    <section>
+      <div class="projects">
+        <a class="card freelance-card reveal" href="https://ledauphinn.github.io/laVanda" target="_blank" rel="noopener">
+          <div class="card__preview">
+            <iframe src="https://ledauphinn.github.io/laVanda" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="laVanda preview"></iframe>
+          </div>
+          <div class="card__body">
+            <div class="card__info">
+              <h3>la Vanda</h3>
+              <p class="tag">E-commerce template · flower shop in Wiesbaden</p>
+            </div>
+            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- ─── FOOTER ─── -->
+    <footer class="reveal">
+      <span>&copy; 2025</span>
+      <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener">GitHub ↗</a>
+    </footer>
+
+  </div>
+
+  <script>
+    /* ── Scroll Reveal ── */
+    const reveals = document.querySelectorAll('.reveal');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    reveals.forEach(el => observer.observe(el));
+
+    /* ── Card Spotlight (mouse-follow glow) ── */
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const r = card.getBoundingClientRect();
+        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+      });
+    });
+  </script>
+
+</body>
+</html>
