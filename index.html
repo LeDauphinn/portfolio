@@ -150,19 +150,7 @@
                   inset 0 1px 0 rgba(255,255,255,.06);
     }
 
-    /* Spotlight glow that follows the mouse */
-    .card::before {
-      content: '';
-      position: absolute; inset: 0;
-      border-radius: inherit;
-      background: radial-gradient(700px circle at var(--mx, 50%) var(--my, 50%),
-        rgba(192, 132, 252, .07), transparent 40%);
-      opacity: 0;
-      transition: opacity .45s;
-      pointer-events: none;
-      z-index: 2;
-    }
-    .card:hover::before { opacity: 1; }
+
 
     /* Iframe preview */
     .card__preview {
@@ -388,17 +376,7 @@
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     reveals.forEach(el => observer.observe(el));
-
-    /* ── Card Spotlight (mouse-follow glow) ── */
-    document.querySelectorAll('.card').forEach(card => {
-      card.addEventListener('mousemove', e => {
-        const r = card.getBoundingClientRect();
-        card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
-        card.style.setProperty('--my', (e.clientY - r.top) + 'px');
-      });
-    });
   </script>
 
 </body>
 </html>
-
