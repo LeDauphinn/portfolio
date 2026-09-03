@@ -181,33 +181,18 @@
       transform-origin: top left;
       border: none;
       pointer-events: none;
-      filter: brightness(.92) saturate(.95);
-      transition: filter .6s var(--ease), transform .8s var(--ease);
     }
-    .card:hover .card__preview iframe {
-      filter: brightness(1) saturate(1);
+    .card__preview img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border: none;
+      pointer-events: none;
     }
 
-    /* Gradient shimmer strip on hover */
-    .card__preview::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, transparent 40%, rgba(192,132,252,.08) 50%, transparent 60%);
-      background-size: 250% 250%;
-      opacity: 0;
-      transition: opacity .5s;
-      pointer-events: none;
-      z-index: 1;
-    }
-    .card:hover .card__preview::after {
-      opacity: 1;
-      animation: shimmerMove 2.5s ease-in-out infinite;
-    }
-    @keyframes shimmerMove {
-      0%   { background-position: 200% 200%; }
-      100% { background-position: -50% -50%; }
-    }
+
 
     /* Card body */
     .card__body {
@@ -326,7 +311,7 @@
 
         <a class="card reveal" href="https://dutacs.de" target="_blank" rel="noopener">
           <div class="card__preview">
-            <img src="https://dutacs.de" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutacs.de preview"></img>
+            <iframe src="https://dutacs.de" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutacs.de preview"></iframe>
           </div>
           <div class="card__body">
             <div class="card__info">
@@ -339,7 +324,7 @@
 
         <a class="card reveal" href="https://fivebaysresort.com" target="_blank" rel="noopener">
           <div class="card__preview">
-            <img src="./assets/marina.webp" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="fivebaysresort.com preview"></img>
+            <img src="./assets/marina.webp" alt="fivebaysresort.com preview" loading="lazy" />
           </div>
           <div class="card__body">
             <div class="card__info">
@@ -360,9 +345,9 @@
     <!-- ─── FREELANCE ─── -->
     <section>
       <div class="projects">
-        <a class="card freelance-card reveal" href="https://dutechub.com" target="_blank" rel="noopener">
+        <a class="card reveal" href="https://dutechub.com" target="_blank" rel="noopener">
           <div class="card__preview">
-            <img src="https://dutechub.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutechub.com preview"></img>
+            <iframe src="https://dutechub.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutechub.com preview"></iframe>
           </div>
           <div class="card__body">
             <div class="card__info">
@@ -373,9 +358,9 @@
           </div>
         </a>
 
-        <a class="card freelance-card reveal" href="https://ledauphinn.github.io/laVanda" target="_blank" rel="noopener">
+        <a class="card reveal" href="https://ledauphinn.github.io/laVanda" target="_blank" rel="noopener">
           <div class="card__preview">
-            <img src="https://ledauphinn.github.io/laVanda" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="laVanda preview"></img>
+            <iframe src="https://ledauphinn.github.io/laVanda" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="laVanda preview"></iframe>
           </div>
           <div class="card__body">
             <div class="card__info">
