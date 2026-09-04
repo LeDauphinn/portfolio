@@ -74,14 +74,14 @@
     .page {
       position: relative;
       z-index: 1;
-      max-width: 1100px;
+      max-width: 1320px;
       margin: 0 auto;
-      padding: 0 clamp(20px, 5vw, 64px);
+      padding: 0 clamp(20px, 4vw, 56px);
     }
 
     /* ───────── HEADER ───────── */
     header {
-      padding: clamp(48px, 12vh, 160px) 0 clamp(32px, 6vh, 80px);
+      padding: clamp(48px, 10vh, 120px) 0 clamp(32px, 5vh, 64px);
     }
     header .label {
       display: inline-block;
@@ -114,21 +114,43 @@
       line-height: 1.6;
     }
 
-    /* ───────── SECTION LABELS ───────── */
-    .section-label {
+    /* ───────── 3-COLUMN GRID ───────── */
+    .columns-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 40px;
+    }
+
+    @media (min-width: 960px) {
+      .columns-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 28px;
+      }
+    }
+
+    .column {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .column-title {
       font-size: 11px;
       font-weight: 500;
       letter-spacing: .18em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 40px;
+      margin-bottom: 24px;
       padding-bottom: 12px;
       border-bottom: 1px solid rgba(255,255,255,.06);
     }
 
-    /* ───────── PROJECT CARDS ───────── */
-    .projects { display: flex; flex-direction: column; gap: 28px; }
+    .column-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
 
+    /* ───────── PROJECT CARDS ───────── */
     .card {
       position: relative;
       display: block;
@@ -149,8 +171,6 @@
       box-shadow: 0 32px 80px -20px rgba(0,0,0,.5),
                   inset 0 1px 0 rgba(255,255,255,.06);
     }
-
-
 
     /* Iframe preview */
     .card__preview {
@@ -180,31 +200,30 @@
       pointer-events: none;
     }
 
-
-
     /* Card body */
     .card__body {
-      padding: 24px 28px;
+      padding: 20px 22px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       position: relative;
       z-index: 2;
     }
     .card__info h3 {
       font-weight: 400;
-      font-size: 1.05rem;
+      font-size: 1rem;
       letter-spacing: -.01em;
     }
     .card__info .tag {
       font-size: .75rem;
       color: var(--muted);
       margin-top: 4px;
-      letter-spacing: .03em;
+      letter-spacing: .02em;
+      line-height: 1.4;
     }
     .card__arrow {
-      width: 20px; height: 20px;
+      width: 18px; height: 18px;
       color: var(--muted);
       transition: color .3s, transform .4s var(--ease);
       flex-shrink: 0;
@@ -214,36 +233,9 @@
       transform: translate(3px, -3px);
     }
 
-    /* ───────── SEPARATOR ───────── */
-    .separator {
-      margin: 56px 0 48px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      color: var(--muted);
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-    }
-    .separator::before, .separator::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,.08), transparent);
-    }
-
-    /* ───────── FREELANCE CARD (smaller, distinct) ───────── */
-    .freelance-card {
-      max-width: 640px;
-    }
-    .freelance-card .card__preview {
-      aspect-ratio: 16 / 10;
-    }
-
     /* ───────── FOOTER ───────── */
     footer {
-      margin-top: clamp(80px, 14vh, 160px);
+      margin-top: clamp(80px, 12vh, 140px);
       padding: 40px 0;
       display: flex;
       align-items: center;
@@ -289,96 +281,115 @@
     <header>
       <span class="label reveal">Selected work</span>
       <h1 class="reveal">Web Design<br><em>Engineer</em></h1>
-      <p class="sub reveal">Crafting digital experiences - from concept to code.</p>
+      <p class="sub reveal">Crafting digital experiences — from concept to code.</p>
     </header>
 
-    <!-- ─── PROFESSIONAL WORK ─── -->
-    <section>
-      <p class="section-label reveal">Professional · DuTACS</p>
-      <div class="projects">
+    <!-- ─── 3 COLUMNS WORK GRID ─── -->
+    <main class="columns-grid">
 
-        <a class="card reveal" href="https://dutacs.de" target="_blank" rel="noopener">
-          <div class="card__preview">
-            <iframe src="https://dutacs.de" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutacs.de preview"></iframe>
-          </div>
-          <div class="card__body">
-            <div class="card__info">
-              <h3>dutacs.de</h3>
-              <p class="tag">Corporate travel management - IATA-certified TMC</p>
+      <!-- COLUMN 1: PROFESSIONAL WORK -->
+      <div class="column reveal">
+        <h2 class="column-title">Professional Work · DuTACS</h2>
+        <div class="column-cards">
+
+          <a class="card" href="https://dutacs.de" target="_blank" rel="noopener">
+            <div class="card__preview">
+              <iframe src="https://dutacs.de" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutacs.de preview"></iframe>
             </div>
-            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
-          </div>
-        </a>
-
-        <a class="card reveal" href="https://fivebaysresort.com" target="_blank" rel="noopener">
-          <div class="card__preview">
-            <img src="./assets/marina.webp" alt="fivebaysresort.com preview" loading="lazy" />
-          </div>
-          <div class="card__body">
-            <div class="card__info">
-              <h3>fivebaysresort.com</h3>
-              <p class="tag">Luxury resort - Mediterranean timeshare destination</p>
+            <div class="card__body">
+              <div class="card__info">
+                <h3>dutacs.de</h3>
+                <p class="tag">Corporate travel management · IATA-certified TMC</p>
+              </div>
+              <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
             </div>
-            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
-          </div>
-        </a>
+          </a>
 
+          <a class="card" href="https://fivebaysresort.com" target="_blank" rel="noopener">
+            <div class="card__preview">
+              <img src="./assets/marina.webp" alt="fivebaysresort.com preview" loading="lazy" />
+            </div>
+            <div class="card__body">
+              <div class="card__info">
+                <h3>fivebaysresort.com</h3>
+                <p class="tag">Luxury resort · Mediterranean timeshare destination</p>
+              </div>
+              <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+            </div>
+          </a>
+
+          <a class="card" href="https://dutechub.com" target="_blank" rel="noopener">
+            <div class="card__preview">
+              <iframe src="https://dutechub.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutechub.com preview"></iframe>
+            </div>
+            <div class="card__body">
+              <div class="card__info">
+                <h3>dutechub.com</h3>
+                <p class="tag">Cross-regional tech community hub</p>
+              </div>
+              <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+            </div>
+          </a>
+
+        </div>
       </div>
-    </section>
-    
-    <!-- ─── SEPARATOR ─── -->
-    <div class="separator reveal">Freelance</div>
-    
-    <!-- ─── FREELANCE ─── -->
-    <section>
-      <div class="projects">
-        <a class="card reveal" href="https://dutechub.com" target="_blank" rel="noopener">
-          <div class="card__preview">
-            <iframe src="https://dutechub.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutechub.com preview"></iframe>
-          </div>
-          <div class="card__body">
-            <div class="card__info">
-              <h3>dutechub.com</h3>
-              <p class="tag">Cross-regional tech community hub</p>
-            </div>
-            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
-          </div>
-        </a>
-        <a class="card reveal" href="https://ledauphinn.github.io/laVanda" target="_blank" rel="noopener">
-          <div class="card__preview">
-            <iframe src="https://ledauphinn.github.io/laVanda" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="laVanda preview"></iframe>
-          </div>
-          <div class="card__body">
-            <div class="card__info">
-              <h3>la Vanda</h3>
-              <p class="tag">E-commerce template · flower shop in Wiesbaden</p>
-            </div>
-            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
-          </div>
-        </a>
-      </div>
-    </section>
 
-    <!-- ─── SEPARATOR ─── -->
-    <div class="separator reveal">Hobby</div>
-    
-    <!-- ─── HOBBY ─── -->
-    <section>
-      <div class="projects">
-        <a class="card reveal" href="https://ledauphinn.github.io/gifty" target="_blank" rel="noopener">
-          <div class="card__preview">
-            <iframe src="https://ledauphinn.github.io/gifty" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="gifty preview"></iframe>
-          </div>
-          <div class="card__body">
-            <div class="card__info">
-              <h3>Gifty</h3>
-              <p class="tag">Hobby project: A tool to find gift ideas for your loved ones</p>
+      <!-- COLUMN 2: FREELANCE -->
+      <div class="column reveal">
+        <h2 class="column-title">Freelance</h2>
+        <div class="column-cards">
+
+          <a class="card" href="https://ledauphinn.github.io/laVanda" target="_blank" rel="noopener">
+            <div class="card__preview">
+              <iframe src="https://ledauphinn.github.io/laVanda" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="laVanda preview"></iframe>
             </div>
-            <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
-          </div>
-        </a>
+            <div class="card__body">
+              <div class="card__info">
+                <h3>la Vanda</h3>
+                <p class="tag">E-commerce template · flower shop in Wiesbaden</p>
+              </div>
+              <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+            </div>
+          </a>
+
+        </div>
       </div>
-    </section>
+
+      <!-- COLUMN 3: HOBBY -->
+      <div class="column reveal">
+        <h2 class="column-title">Hobby</h2>
+        <div class="column-cards">
+
+          <a class="card" href="https://ledauphinn.github.io/gifty" target="_blank" rel="noopener">
+            <div class="card__preview">
+              <iframe src="https://ledauphinn.github.io/gifty" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="gifty preview"></iframe>
+            </div>
+            <div class="card__body">
+              <div class="card__info">
+                <h3>Gifty</h3>
+                <p class="tag">Gift ideas finder application</p>
+              </div>
+              <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+            </div>
+          </a>
+
+          <a class="card" href="https://ledauphinn.github.io" target="_blank" rel="noopener">
+            <div class="card__preview">
+              <iframe src="https://ledauphinn.github.io" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="ledauphinn.github.io preview"></iframe>
+            </div>
+            <div class="card__body">
+              <div class="card__info">
+                <h3>ledauphinn.github.io</h3>
+                <p class="tag">Personal site & creative experiments</p>
+              </div>
+              <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </main>
 
     <!-- ─── FOOTER ─── -->
     <footer class="reveal">
