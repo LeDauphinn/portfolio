@@ -19,7 +19,7 @@
       --accent-1: #c084fc;   /* soft violet */
       --accent-2: #38bdf8;   /* sky blue */
       --accent-3: #fb923c;   /* warm amber */
-      --radius: 14px;
+      --radius: 16px;
       --ease: cubic-bezier(.22, 1, .36, 1);
     }
 
@@ -74,11 +74,10 @@
     .page {
       position: relative;
       z-index: 1;
-      max-width: 1360px;
+      max-width: 1400px;
       min-height: 100vh;
-      min-height: 100dvh;
       margin: 0 auto;
-      padding: clamp(14px, 2.5vh, 28px) clamp(20px, 4vw, 56px);
+      padding: clamp(24px, 3.5vw, 48px) clamp(20px, 4vw, 56px);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -86,7 +85,15 @@
 
     /* ───────── HEADER ───────── */
     header {
-      padding: clamp(6px, 1.2vh, 16px) 0;
+      padding-bottom: 20px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    header .header-main {
+      flex: 1;
     }
     header .label {
       display: inline-block;
@@ -95,12 +102,12 @@
       letter-spacing: .18em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     header h1 {
       font-family: 'Playfair Display', serif;
       font-weight: 400;
-      font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+      font-size: clamp(2.2rem, 3.8vw, 3.4rem);
       line-height: 1.1;
       letter-spacing: -.02em;
     }
@@ -112,27 +119,52 @@
       background-clip: text;
     }
     header .sub {
-      margin-top: 6px;
-      font-size: clamp(.8rem, 1.05vw, .95rem);
+      margin-top: 8px;
+      font-size: clamp(.85rem, 1.1vw, 1rem);
       color: var(--muted);
-      max-width: 48ch;
-      line-height: 1.4;
+      max-width: 52ch;
+      line-height: 1.45;
+    }
+
+    /* GitHub Button */
+    .github-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 30px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      color: var(--fg);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 400;
+      transition: all .3s var(--ease);
+      white-space: nowrap;
+    }
+    .github-btn:hover {
+      background: rgba(255,255,255,.12);
+      border-color: rgba(255,255,255,.25);
+      transform: translateY(-2px);
+    }
+    .github-btn svg {
+      width: 16px; height: 16px;
+      fill: currentColor;
     }
 
     /* ───────── 3-COLUMN GRID ───────── */
     .columns-grid {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 24px;
-      margin: clamp(10px, 1.5vh, 20px) 0;
+      gap: 28px;
+      margin: 28px 0;
       flex: 1;
-      align-content: center;
     }
 
     @media (min-width: 960px) {
       .columns-grid {
         grid-template-columns: repeat(3, 1fr);
-        gap: 22px;
+        gap: 24px;
       }
     }
 
@@ -147,15 +179,15 @@
       letter-spacing: .18em;
       text-transform: uppercase;
       color: var(--muted);
-      margin-bottom: 12px;
-      padding-bottom: 6px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
       border-bottom: 1px solid rgba(255,255,255,.06);
     }
 
     .column-cards {
       display: flex;
       flex-direction: column;
-      gap: 14px;
+      gap: 20px;
     }
 
     /* ───────── PROJECT CARDS ───────── */
@@ -174,17 +206,17 @@
       cursor: pointer;
     }
     .card:hover {
-      transform: translateY(-3px) scale(1.005);
-      border-color: rgba(255,255,255,.12);
-      box-shadow: 0 20px 45px -15px rgba(0,0,0,.5),
-                  inset 0 1px 0 rgba(255,255,255,.06);
+      transform: translateY(-4px) scale(1.005);
+      border-color: rgba(255,255,255,.14);
+      box-shadow: 0 24px 50px -15px rgba(0,0,0,.6),
+                  inset 0 1px 0 rgba(255,255,255,.08);
     }
 
-    /* Iframe preview */
+    /* Preview section (larger aspect ratio) */
     .card__preview {
       position: relative;
       width: 100%;
-      height: clamp(105px, 15vh, 165px);
+      aspect-ratio: 16 / 9.5;
       overflow: hidden;
       background: #111;
     }
@@ -210,28 +242,28 @@
 
     /* Card body */
     .card__body {
-      padding: 12px 16px;
+      padding: 16px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 10px;
+      gap: 12px;
       position: relative;
       z-index: 2;
     }
     .card__info h3 {
       font-weight: 400;
-      font-size: .9rem;
+      font-size: .98rem;
       letter-spacing: -.01em;
     }
     .card__info .tag {
-      font-size: .7rem;
+      font-size: .76rem;
       color: var(--muted);
-      margin-top: 2px;
+      margin-top: 3px;
       letter-spacing: .01em;
-      line-height: 1.3;
+      line-height: 1.35;
     }
     .card__arrow {
-      width: 16px; height: 16px;
+      width: 18px; height: 18px;
       color: var(--muted);
       transition: color .3s, transform .4s var(--ease);
       flex-shrink: 0;
@@ -243,12 +275,12 @@
 
     /* ───────── FOOTER ───────── */
     footer {
-      padding: clamp(8px, 1.2vh, 16px) 0;
+      padding-top: 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-top: 1px solid rgba(255,255,255,.06);
-      font-size: .75rem;
+      font-size: .8rem;
       color: var(--muted);
     }
     footer a {
@@ -270,9 +302,10 @@
     }
 
     /* ───────── RESPONSIVE ───────── */
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
+      header { flex-direction: column; align-items: flex-start; gap: 16px; }
       .card__body { padding: 14px 16px; }
-      footer { flex-direction: column; gap: 8px; text-align: center; }
+      footer { flex-direction: column; gap: 10px; text-align: center; }
     }
   </style>
 </head>
@@ -285,10 +318,16 @@
   <div class="page">
 
     <!-- ─── HEADER ─── -->
-    <header>
-      <span class="label reveal">Selected work</span>
-      <h1 class="reveal">Web Design <em>Engineer</em></h1>
-      <p class="sub reveal">Crafting digital experiences — from concept to code.</p>
+    <header class="reveal">
+      <div class="header-main">
+        <span class="label">Selected work</span>
+        <h1>Web Design <em>Engineer</em></h1>
+        <p class="sub">Crafting digital experiences — from concept to code.</p>
+      </div>
+      <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener" class="github-btn" aria-label="GitHub Profile">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
+        GitHub Profile ↗
+      </a>
     </header>
 
     <!-- ─── 3 COLUMNS WORK GRID ─── -->
@@ -401,7 +440,7 @@
     <!-- ─── FOOTER ─── -->
     <footer class="reveal">
       <span>&copy; 2025</span>
-      <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener">GitHub ↗</a>
+      <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener">github.com/LeDauphinn ↗</a>
     </footer>
 
   </div>
