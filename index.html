@@ -2,40 +2,113 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Portfolio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yunus Eren Türkeri — Selected work</title>
   <meta name="description" content="Frontend | Full-stack Web | Web Design Engineer selected work.">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;1,400&display=swap" rel="stylesheet">
+  <meta name="theme-color" content="#0a0a0b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23c084fc'/%3E%3C/svg%3E">
+  <script>document.documentElement.classList.add('js')</script>
+  <link rel="preload" href="./assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/playfair-display-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
   <style>
+    /* ───────── FONTS (self-hosted, latin subsets) ───────── */
+    @font-face {
+      font-family: 'Schibsted Grotesk';
+      font-style: normal;
+      font-weight: 400 700;
+      font-display: swap;
+      src: url('./assets/fonts/schibsted-grotesk-latin.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('./assets/fonts/playfair-display-latin.woff2') format('woff2');
+    }
+    @font-face {
+      font-family: 'Playfair Display';
+      font-style: italic;
+      font-weight: 400;
+      font-display: swap;
+      src: url('./assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+    }
+    /* Metric-matched local fallbacks: the swap from these to the web fonts
+       is near-invisible (values computed from the fonts' hhea/OS2 tables). */
+    @font-face {
+      font-family: 'Schibsted Grotesk Fallback';
+      src: local('Arial');
+      size-adjust: 105.22%;
+      ascent-override: 92.82%;
+      descent-override: 24.5%;
+      line-gap-override: 0%;
+    }
+    @font-face {
+      font-family: 'Playfair Display Fallback';
+      src: local('Georgia');
+      size-adjust: 102.37%;
+      ascent-override: 105.7%;
+      descent-override: 24.52%;
+      line-gap-override: 0%;
+    }
+
     /* ───────── RESET & BASE ───────── */
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     :root {
       --bg:    #0a0a0b;
-      --fg:    #e8e6e3;
-      --muted: #6b6b6b;
+      --fg:    #e8e6e3;          /* primary text            14.9:1 */
+      --fg-2:  #a5a19b;          /* secondary (lede)         7.6:1 */
+      --fg-3:  #8f8b86;          /* tertiary (meta, labels)  5.8:1 */
       --accent-1: #c084fc;   /* soft violet */
       --accent-2: #38bdf8;   /* sky blue */
-      --accent-3: #fb923c;   /* warm amber */
       --radius: 16px;
       --ease: cubic-bezier(.22, 1, .36, 1);
+
+      /* Type roles */
+      --font-display: 'Playfair Display', 'Playfair Display Fallback', Georgia, 'Times New Roman', serif;
+      --font-text:    'Schibsted Grotesk', 'Schibsted Grotesk Fallback', Arial, system-ui, sans-serif;
+
+      --text-display: clamp(2.5rem, 4.8vw, 4.25rem);       /* h1 */
+      --text-lede:    clamp(1rem, 0.94rem + 0.3vw, 1.125rem);
+      --text-title:   1rem;        /* card names */
+      --text-ui:      0.875rem;    /* buttons */
+      --text-meta:    0.8125rem;   /* card descriptions, footer */
+      --text-label:   0.72rem;     /* tracked section labels (11.5px) */
+
+      /* Spacing rhythm: tight inside a group, generous between groups */
+      --space-card:    20px;   /* card ↔ card */
+      --space-group:   24px;   /* rail ↔ cards (stacked) */
+      --space-section: clamp(40px, 5vw, 64px);   /* group ↔ group */
     }
 
-    html { scroll-behavior: smooth; }
+    html {
+      scroll-behavior: smooth;
+      scrollbar-color: rgba(232, 230, 227, .18) transparent;
+    }
 
     body {
-      font-family: 'Inter', system-ui, sans-serif;
-      font-weight: 300;
+      font-family: var(--font-text);
+      font-weight: 400;
+      font-size: 1rem;
+      line-height: 1.5;
+      font-synthesis: none;
       background: var(--bg);
       color: var(--fg);
       min-height: 100vh;
+      min-height: 100dvh;
       overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
       -webkit-font-smoothing: antialiased;
     }
 
     ::selection { background: rgba(192, 132, 252, .3); }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-2);
+      outline-offset: 4px;
+    }
 
     /* ───────── NOISE TEXTURE ───────── */
     body::before {
@@ -46,25 +119,41 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.75' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
     }
 
-    /* ───────── GRADIENT ORB (ambient bg) ───────── */
+    /* ───────── LIVING LIGHT (WebGL) ─────────
+       Two colour fields drift and lean toward the cursor; a hovered card warms the
+       field behind it with that site's own colours. The CSS orbs below are the
+       fallback and are hidden once the canvas is running. */
+    .light {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.2s var(--ease);
+    }
+    .gl .light { opacity: 1; }
+    .gl .orb { display: none; }
+
+    /* ───────── GRADIENT ORB (ambient bg, fallback) ───────── */
     .orb {
       position: fixed;
-      width: 60vw; height: 60vw;
+      width: 72vw; height: 72vw;
       border-radius: 50%;
-      filter: blur(120px);
       opacity: .12;
       pointer-events: none;
       z-index: 0;
-      transition: transform 8s var(--ease);
+      will-change: transform;
     }
     .orb--1 {
-      top: -20%; left: -15%;
-      background: radial-gradient(circle, var(--accent-1), transparent 70%);
+      top: -26%; left: -21%;
+      background: radial-gradient(circle closest-side, var(--accent-1) 0%, transparent 100%);
       animation: drift1 22s ease-in-out infinite alternate;
     }
     .orb--2 {
-      bottom: -25%; right: -20%;
-      background: radial-gradient(circle, var(--accent-2), transparent 70%);
+      bottom: -31%; right: -26%;
+      background: radial-gradient(circle closest-side, var(--accent-2) 0%, transparent 100%);
       animation: drift2 26s ease-in-out infinite alternate;
     }
     @keyframes drift1 { to { transform: translate(10vw, 15vh); } }
@@ -74,10 +163,13 @@
     .page {
       position: relative;
       z-index: 1;
+      --gutter: clamp(20px, 4vw, 56px);
       max-width: 1400px;
       min-height: 100vh;
+      min-height: 100dvh;
       margin: 0 auto;
-      padding: clamp(24px, 3.5vw, 48px) clamp(20px, 4vw, 56px);
+      padding-block: clamp(24px, 3.5vw, 48px) max(clamp(24px, 3.5vw, 48px), env(safe-area-inset-bottom));
+      padding-inline: max(var(--gutter), env(safe-area-inset-left)) max(var(--gutter), env(safe-area-inset-right));
       display: flex;
       flex-direction: column;
       justify-content: space-between;
@@ -85,30 +177,31 @@
 
     /* ───────── HEADER ───────── */
     header {
-      padding-bottom: 20px;
+      /* Air above and below the title: it should float, not sit on the page edge */
+      padding-top: clamp(8px, 4vh, 40px);
+      padding-bottom: 32px;
       display: flex;
-      align-items: flex-end;
-      justify-content: space-between;
-      gap: 20px;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 24px;
       border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    @media (min-width: 769px) {
+      header {
+        flex-direction: row;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 24px;
+      }
     }
     header .header-main {
       flex: 1;
     }
-    header .label {
-      display: inline-block;
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 8px;
-    }
     header h1 {
-      font-family: 'Playfair Display', serif;
+      font-family: var(--font-display);
       font-weight: 400;
-      font-size: clamp(2.2rem, 3.8vw, 3.4rem);
-      line-height: 1.1;
+      font-size: var(--text-display);
+      line-height: 1.12;   /* Playfair's descenders and the italic line need room to breathe */
       letter-spacing: -.02em;
     }
     header h1 em {
@@ -123,11 +216,12 @@
       display: inline-block;
     }
     header .sub {
-      margin-top: 8px;
-      font-size: clamp(.85rem, 1.1vw, 1rem);
-      color: var(--muted);
-      max-width: 52ch;
-      line-height: 1.45;
+      margin-top: clamp(16px, 2vw, 24px);
+      font-size: var(--text-lede);
+      color: var(--fg-2);
+      max-width: 46ch;
+      line-height: 1.5;
+      text-wrap: pretty;
     }
 
     /* Header Actions */
@@ -146,79 +240,163 @@
       border: 1px solid rgba(255,255,255,.1);
       color: var(--fg);
       text-decoration: none;
-      font-size: .85rem;
-      font-weight: 400;
-      transition: all .3s var(--ease);
+      font-size: var(--text-ui);
+      font-weight: 500;
+      line-height: 1;
+      letter-spacing: .005em;
+      transition: background-color .3s var(--ease),
+                  border-color .3s var(--ease),
+                  transform .3s var(--ease);
       white-space: nowrap;
     }
-    .action-btn:hover {
-      background: rgba(255,255,255,.12);
-      border-color: rgba(255,255,255,.25);
-      transform: translateY(-2px);
+    @media (hover: hover) {
+      .action-btn:hover {
+        background: rgba(255,255,255,.12);
+        border-color: rgba(255,255,255,.25);
+        transform: translateY(-2px);
+      }
+    }
+    .action-btn:active {
+      background: rgba(255,255,255,.14);
+      transform: translateY(0) scale(.98);
+      transition-duration: .08s;
+    }
+    @media (pointer: coarse) {
+      .action-btn { min-height: 44px; padding-inline: 20px; }
     }
     .action-btn svg {
       width: 16px; height: 16px;
       fill: currentColor;
+      flex-shrink: 0;
+    }
+    /* Inline external-link arrow: same stroke as the card arrows */
+    .ext-arrow {
+      width: .85em; height: .85em;
+      fill: none !important;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-left: -2px;
+      opacity: .7;
+      transition: opacity .3s, transform .4s var(--ease);
+    }
+    @media (hover: hover) {
+      .action-btn:hover .ext-arrow,
+      footer a:hover .ext-arrow { opacity: 1; transform: translate(1px, -1px); }
     }
 
-    /* ───────── 3-COLUMN GRID ───────── */
-    .columns-grid {
+    /* ───────── WORK: one row per category ─────────
+       Reading order is top→down (Professional → Freelance → Hobby);
+       inside a row the rail names the group and the cards sit beside it. */
+    .work {
+      flex: 1;
+      margin-top: var(--space-section);
+      display: flex;
+      flex-direction: column;
+    }
+    .group {
       display: grid;
       grid-template-columns: 1fr;
-      gap: 28px;
-      margin: 28px 0;
-      flex: 1;
+      gap: var(--space-group);
+      padding-block: var(--space-section);
+      border-top: 1px solid rgba(255,255,255,.06);
+    }
+    .group:first-child { border-top: 0; padding-top: 0; }
+    .group__rail {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .group__title {
+      font-family: var(--font-display);
+      font-weight: 400;
+      font-size: 1.5rem;
+      line-height: 1.2;
+      letter-spacing: -.01em;
+    }
+    .group__meta {
+      font-size: var(--text-meta);
+      line-height: 1.4;
+      color: var(--fg-3);
+      max-width: 24ch;
+      text-wrap: pretty;
+    }
+    .group__cards {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--space-card);
+      min-width: 0;
     }
 
-    @media (min-width: 960px) {
-      .columns-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px;
+    @media (min-width: 640px) {
+      .group__cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (min-width: 900px) {
+      .group {
+        grid-template-columns: minmax(180px, 1fr) minmax(0, 4fr);
+        gap: clamp(32px, 4vw, 48px);
       }
-    }
-
-    .column {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .column-title {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: .18em;
-      text-transform: uppercase;
-      color: var(--muted);
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid rgba(255,255,255,.06);
-    }
-
-    .column-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
+      .group__rail {
+        position: sticky;
+        top: 32px;
+        align-self: start;
+      }
     }
 
     /* ───────── PROJECT CARDS ───────── */
     .card {
       position: relative;
+      isolation: isolate;
       display: block;
       text-decoration: none;
       color: inherit;
       border-radius: var(--radius);
-      overflow: hidden;
       background: rgba(255,255,255,.03);
       border: 1px solid rgba(255,255,255,.06);
-      transition: transform .55s var(--ease),
-                  border-color .4s,
-                  box-shadow .5s var(--ease);
-      cursor: pointer;
+      /* Exit is quicker than entrance; hover overrides the durations below */
+      transition: transform .35s var(--ease),
+                  border-color .3s;
     }
-    .card:hover {
-      transform: translateY(-4px) scale(1.005);
-      border-color: rgba(255,255,255,.14);
+    /* Stable hit area: the card lifts 4px on hover, so without this the cursor
+       resting on the bottom edge would lose the card, drop it, catch it again… */
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 -8px;
+      z-index: -1;
+    }
+    .card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
       box-shadow: 0 24px 50px -15px rgba(0,0,0,.6),
                   inset 0 1px 0 rgba(255,255,255,.08);
+      opacity: 0;
+      transition: opacity .3s var(--ease);
+      pointer-events: none;
+      z-index: -1;
+    }
+    /* The card is a window onto the site: on hover the window opens slightly
+       (preview eases in), the frame lifts, and the arrow points the way out. */
+    @media (hover: hover) {
+      .card { will-change: transform; }
+      .card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(255,255,255,.14);
+        transition-duration: .5s, .4s;
+      }
+      .card:hover::after { opacity: 1; transition-duration: .5s; }
+      .card:hover .card__preview img {
+        transform: scale(1.04);
+        transition-duration: .9s;
+      }
+    }
+    .card:active {
+      transform: translateY(0) scale(.985);
+      border-color: rgba(255,255,255,.14);
+      transition-duration: .1s;
     }
 
     /* Preview section (larger aspect ratio) */
@@ -227,17 +405,8 @@
       width: 100%;
       aspect-ratio: 16 / 9.5;
       overflow: hidden;
+      border-radius: calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
       background: #111;
-    }
-    .card__preview iframe {
-      position: absolute;
-      top: 0; left: 0;
-      width: 200%;
-      height: 200%;
-      transform: scale(.5);
-      transform-origin: top left;
-      border: none;
-      pointer-events: none;
     }
     .card__preview img {
       position: absolute;
@@ -247,6 +416,9 @@
       object-fit: cover;
       border: none;
       pointer-events: none;
+      transform-origin: 50% 50%;
+      transition: transform .45s var(--ease);
+      will-change: transform;   /* own layer: the zoom never re-rasterizes the card's text */
     }
 
     /* Card body */
@@ -260,67 +432,129 @@
       z-index: 2;
     }
     .card__info h3 {
-      font-weight: 400;
-      font-size: .98rem;
-      letter-spacing: -.01em;
+      font-weight: 500;
+      font-size: var(--text-title);
+      line-height: 1.3;
+      letter-spacing: -.005em;
     }
+    .nb { white-space: nowrap; }
     .card__info .tag {
-      font-size: .76rem;
-      color: var(--muted);
-      margin-top: 3px;
-      letter-spacing: .01em;
-      line-height: 1.35;
+      font-size: var(--text-meta);
+      color: var(--fg-3);
+      margin-top: 4px;
+      line-height: 1.45;
+      text-wrap: pretty;
     }
     .card__arrow {
       width: 18px; height: 18px;
-      color: var(--muted);
-      transition: color .3s, transform .4s var(--ease);
+      color: var(--fg-3);
+      transition: color .25s, transform .3s var(--ease);
       flex-shrink: 0;
     }
-    .card:hover .card__arrow {
-      color: var(--fg);
-      transform: translate(3px, -3px);
+    @media (hover: hover) {
+      .card:hover .card__arrow {
+        color: var(--fg);
+        transform: translate(3px, -3px);
+        transition-duration: .3s, .5s;
+      }
     }
 
     /* ───────── FOOTER ───────── */
     footer {
-      padding-top: 20px;
+      padding-top: 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       border-top: 1px solid rgba(255,255,255,.06);
-      font-size: .8rem;
-      color: var(--muted);
+      font-size: var(--text-meta);
+      line-height: 1.4;
+      color: var(--fg-3);
     }
     footer a {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      min-height: 44px;
+      margin-block: -13px;   /* keeps the visual rhythm; only the hit area grows */
       color: var(--fg);
       text-decoration: none;
       transition: color .3s;
     }
-    footer a:hover { color: var(--accent-1); }
+    @media (hover: hover) {
+      footer a:hover { color: var(--accent-1); }
+    }
 
-    /* ───────── REVEAL ANIMATION ───────── */
-    .reveal {
+    /* ───────── REVEAL ANIMATION (JS-gated: content is never hidden without it) ───────── */
+    .js .reveal {
       opacity: 0;
       transform: translateY(24px);
       transition: opacity .8s var(--ease), transform .8s var(--ease);
     }
-    .reveal.visible {
+    .js .reveal.visible {
       opacity: 1;
       transform: translateY(0);
     }
 
+    /* ───────── REDUCED MOTION ───────── */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .orb { animation: none; will-change: auto; }
+      .js .reveal { opacity: 1; transform: none; transition: none; }
+      .card, .card::after, .card__arrow, .card__preview img, .action-btn, .ext-arrow, #cycle-text { transition: none; }
+      .card:hover, .card:active, .card:hover .card__preview img, .card:hover .card__arrow, .action-btn:hover { transform: none; }
+      .card, .card__preview img { will-change: auto; }
+    }
+
     /* ───────── RESPONSIVE ───────── */
-    @media (max-width: 768px) {
-      header { flex-direction: column; align-items: flex-start; gap: 16px; }
-      .card__body { padding: 14px 16px; }
-      footer { flex-direction: column; gap: 10px; text-align: center; }
+    /* Base styles are the phone layout; these widen it. */
+    .card__body { padding: 14px 16px; }
+    footer { flex-direction: column; align-items: flex-start; gap: 8px; }
+
+    @media (min-width: 769px) {
+      .card__body { padding: 16px 20px; }
+      footer { flex-direction: row; align-items: center; gap: 16px; }
+    }
+
+    /* Very narrow phones (Fold cover screens, 320px-class): keep the two display lines intact */
+    @media (max-width: 359px) {
+      :root { --text-display: 2.125rem; }
+    }
+
+    /* Short landscape viewports (phones on their side): compact the header so the work is
+       visible in the first screen */
+    @media (max-height: 520px) and (min-width: 640px) {
+      .page { padding-block: 16px; }
+      header { padding-top: 0; padding-bottom: 16px; }
+      header .sub { margin-top: 10px; }
+      .work { margin-top: 24px; }
+      :root { --text-display: 2.25rem; }
+      .group {
+        padding-block: 28px;
+        grid-template-columns: minmax(160px, 1fr) minmax(0, 4fr);
+        gap: 32px;
+      }
+      .group__rail { position: static; }
+    }
+
+    /* ───────── PRINT ───────── */
+    @media print {
+      .orb, body::before { display: none; }
+      body { background: #fff; color: #111; }
+      :root { --fg: #111; --fg-2: #444; --fg-3: #666; }
+      .page { max-width: none; padding: 0; min-height: 0; }
+      .js .reveal { opacity: 1; transform: none; }
+      .card { break-inside: avoid; border-color: #ddd; background: none; }
+      .card::after { display: none; }
+      .card__info h3::after { content: " — " attr(data-url); font-weight: 400; color: #666; }
+      .action-btn { border-color: #ccc; }
+      .group__rail { position: static; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Ambient gradient orbs -->
+  <!-- Ambient light: WebGL field when available, CSS orbs otherwise -->
+  <canvas class="light" aria-hidden="true"></canvas>
   <div class="orb orb--1"></div>
   <div class="orb orb--2"></div>
 
@@ -329,9 +563,8 @@
     <!-- ─── HEADER ─── -->
     <header class="reveal">
       <div class="header-main">
-        <span class="label">Selected work</span>
-        <h1>
-          <span id="cycle-text">Web Design</span><br>
+        <h1 aria-label="Web Design, Frontend, Full-stack Web Engineer">
+          <span id="cycle-text" aria-hidden="true">Web Design</span><br>
           <em>Engineer</em>
         </h1>
         <p class="sub">Crafting digital experiences from concept to code.</p>
@@ -343,27 +576,35 @@
         </a>
         <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener" class="action-btn" aria-label="GitHub Profile">
           <svg viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          GitHub Profile ↗
+          GitHub Profile
+          <svg class="ext-arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
         </a>
       </div>
     </header>
 
-    <!-- ─── 3 COLUMNS WORK GRID ─── -->
-    <main class="columns-grid">
+    <!-- ─── WORK, grouped by category ─── -->
+    <main class="work">
 
-      <!-- COLUMN 1: PROFESSIONAL WORK -->
-      <div class="column reveal">
-        <h2 class="column-title">Professional Work · DuTACS</h2>
-        <div class="column-cards">
+      <!-- PROFESSIONAL WORK -->
+      <section class="group reveal" aria-labelledby="group-pro">
+        <div class="group__rail">
+          <h2 class="group__title" id="group-pro">Professional work</h2>
+          <p class="group__meta">Built at DuTACS</p>
+        </div>
+        <div class="group__cards">
 
           <a class="card" href="https://dutacs.de" target="_blank" rel="noopener">
             <div class="card__preview">
-              <img src="./assets/dutacs-de.png" alt="dutacs.de preview" loading="lazy" />
+              <img src="./assets/previews/dutacs-560.webp"
+                   srcset="./assets/previews/dutacs-560.webp 560w, ./assets/previews/dutacs-1120.webp 1120w"
+                   sizes="(min-width: 1024px) 34vw, (min-width: 640px) 44vw, 90vw"
+                   width="1120" height="665" alt="dutacs.de preview"
+                   loading="eager" fetchpriority="high" decoding="async">
             </div>
             <div class="card__body">
               <div class="card__info">
-                <h3>dutacs.de</h3>
-                <p class="tag">Corporate travel management · IATA-certified TMC</p>
+                <h3 data-url="dutacs.de">dutacs.de</h3>
+                <p class="tag">Corporate travel management · <span class="nb">IATA-certified</span> TMC</p>
               </div>
               <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
             </div>
@@ -371,11 +612,15 @@
 
           <a class="card" href="https://fivebaysresort.com" target="_blank" rel="noopener">
             <div class="card__preview">
-              <img src="./assets/marina.webp" alt="fivebaysresort.com preview" loading="lazy" />
+              <img src="./assets/previews/fivebays-560.webp"
+                   srcset="./assets/previews/fivebays-560.webp 560w, ./assets/previews/fivebays-1120.webp 1120w"
+                   sizes="(min-width: 1024px) 34vw, (min-width: 640px) 44vw, 90vw"
+                   width="1120" height="665" alt="fivebaysresort.com preview"
+                   loading="eager" decoding="async">
             </div>
             <div class="card__body">
               <div class="card__info">
-                <h3>fivebaysresort.com</h3>
+                <h3 data-url="fivebaysresort.com">fivebaysresort.com</h3>
                 <p class="tag">Luxury resort · Mediterranean destination</p>
               </div>
               <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
@@ -383,20 +628,27 @@
           </a>
 
         </div>
-      </div>
+      </section>
 
-      <!-- COLUMN 2: FREELANCE -->
-      <div class="column reveal">
-        <h2 class="column-title">Freelance</h2>
-        <div class="column-cards">
+      <!-- FREELANCE -->
+      <section class="group reveal" aria-labelledby="group-freelance">
+        <div class="group__rail">
+          <h2 class="group__title" id="group-freelance">Freelance</h2>
+          <p class="group__meta">Client sites &amp; templates</p>
+        </div>
+        <div class="group__cards">
 
           <a class="card" href="https://dutechub.com" target="_blank" rel="noopener">
             <div class="card__preview">
-              <iframe src="https://dutechub.com" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="dutechub.com preview"></iframe>
+              <img src="./assets/previews/dutechub-560.webp"
+                   srcset="./assets/previews/dutechub-560.webp 560w, ./assets/previews/dutechub-1120.webp 1120w"
+                   sizes="(min-width: 1024px) 34vw, (min-width: 640px) 44vw, 90vw"
+                   width="1120" height="665" alt="dutechub.com preview"
+                   loading="lazy" decoding="async">
             </div>
             <div class="card__body">
               <div class="card__info">
-                <h3>dutechub.com</h3>
+                <h3 data-url="dutechub.com">dutechub.com</h3>
                 <p class="tag">Cross-regional tech community hub</p>
               </div>
               <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
@@ -405,11 +657,15 @@
 
           <a class="card" href="https://ledauphinn.github.io/laVanda" target="_blank" rel="noopener">
             <div class="card__preview">
-              <img src="./assets/la-vanda.png" alt="laVanda preview" loading="lazy" />
+              <img src="./assets/previews/lavanda-560.webp"
+                   srcset="./assets/previews/lavanda-560.webp 560w, ./assets/previews/lavanda-1120.webp 1120w"
+                   sizes="(min-width: 1024px) 34vw, (min-width: 640px) 44vw, 90vw"
+                   width="1120" height="665" alt="laVanda preview"
+                   loading="lazy" decoding="async">
             </div>
             <div class="card__body">
               <div class="card__info">
-                <h3>la Vanda</h3>
+                <h3 data-url="ledauphinn.github.io/laVanda">la Vanda</h3>
                 <p class="tag">E-commerce template · flower shop in Wiesbaden</p>
               </div>
               <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
@@ -417,20 +673,27 @@
           </a>
 
         </div>
-      </div>
+      </section>
 
-      <!-- COLUMN 3: HOBBY -->
-      <div class="column reveal">
-        <h2 class="column-title">Hobby</h2>
-        <div class="column-cards">
+      <!-- HOBBY -->
+      <section class="group reveal" aria-labelledby="group-hobby">
+        <div class="group__rail">
+          <h2 class="group__title" id="group-hobby">Hobby</h2>
+          <p class="group__meta">Personal experiments</p>
+        </div>
+        <div class="group__cards">
 
           <a class="card" href="https://ledauphinn.github.io/gifty" target="_blank" rel="noopener">
             <div class="card__preview">
-              <iframe src="https://ledauphinn.github.io/gifty" loading="lazy" tabindex="-1" sandbox="allow-scripts allow-same-origin" title="gifty preview"></iframe>
+              <img src="./assets/previews/gifty-560.webp"
+                   srcset="./assets/previews/gifty-560.webp 560w, ./assets/previews/gifty-1120.webp 1120w"
+                   sizes="(min-width: 1024px) 34vw, (min-width: 640px) 44vw, 90vw"
+                   width="1120" height="665" alt="Gifty preview"
+                   loading="lazy" decoding="async">
             </div>
             <div class="card__body">
               <div class="card__info">
-                <h3>Gifty</h3>
+                <h3 data-url="ledauphinn.github.io/gifty">Gifty</h3>
                 <p class="tag">Gift ideas finder application</p>
               </div>
               <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
@@ -439,11 +702,15 @@
 
           <a class="card" href="https://ledauphinn.github.io" target="_blank" rel="noopener">
             <div class="card__preview">
-              <img src="./assets/hobby-site.png" alt="ledauphinn.github.io preview" loading="lazy" />
+              <img src="./assets/previews/ledauphinn-560.webp"
+                   srcset="./assets/previews/ledauphinn-560.webp 560w, ./assets/previews/ledauphinn-1120.webp 1120w"
+                   sizes="(min-width: 1024px) 34vw, (min-width: 640px) 44vw, 90vw"
+                   width="1120" height="665" alt="ledauphinn.github.io preview"
+                   loading="lazy" decoding="async">
             </div>
             <div class="card__body">
               <div class="card__info">
-                <h3>ledauphinn.github.io</h3>
+                <h3 data-url="ledauphinn.github.io">ledauphinn.github.io</h3>
                 <p class="tag">Personal site & creative experiments</p>
               </div>
               <svg class="card__arrow" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg>
@@ -451,37 +718,192 @@
           </a>
 
         </div>
-      </div>
+      </section>
 
     </main>
 
     <!-- ─── FOOTER ─── -->
     <footer class="reveal">
       <span>&copy; 2025</span>
-      <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener">github.com/LeDauphinn ↗</a>
+      <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener">github.com/LeDauphinn <svg class="ext-arrow" viewBox="0 0 20 20" aria-hidden="true"><path d="M5 15L15 5M15 5H8M15 5V12"/></svg></a>
     </footer>
 
   </div>
 
   <script>
+    const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* ── Living light ──
+       A fragment shader sums four gaussian colour fields over the page background:
+         0,1  the ambient pair (violet / sky) — drifting, leaning toward the cursor
+         2,3  the "warmth" of the hovered or focused card, coloured from its preview
+       Rendered at 1/3 resolution (it is all soft gradients), dithered against banding,
+       paused when the tab is hidden. No WebGL → the CSS orbs stay. */
+    (() => {
+      const canvas = document.querySelector('.light');
+      const gl = canvas && canvas.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: false, powerPreference: 'low-power' });
+      if (!gl) return;
+
+      const vert = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+      const frag = `
+        precision mediump float;
+        uniform vec2 u_res;
+        uniform vec3 u_pos[4];   /* x, y (0..1, y up), radius */
+        uniform vec3 u_col[4];
+        uniform float u_int[4];
+        float hash(vec2 p){ return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+        void main(){
+          vec2 uv = gl_FragCoord.xy / u_res;
+          float aspect = u_res.x / u_res.y;
+          vec2 p = vec2(uv.x * aspect, uv.y);
+          vec3 c = vec3(0.039, 0.039, 0.043);            /* --bg */
+          for (int i = 0; i < 4; i++) {
+            vec2 q = vec2(u_pos[i].x * aspect, u_pos[i].y);
+            float d = distance(p, q) / u_pos[i].z;
+            c += u_col[i] * exp(-d * d * 2.2) * u_int[i];
+          }
+          c += (hash(gl_FragCoord.xy) - 0.5) / 96.0;      /* dither: no banding on the dark ramp */
+          gl_FragColor = vec4(c, 1.0);
+        }`;
+      const sh = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return o; };
+      const prog = gl.createProgram();
+      gl.attachShader(prog, sh(gl.VERTEX_SHADER, vert));
+      gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, frag));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
+      const a = gl.getAttribLocation(prog, 'a');
+      gl.enableVertexAttribArray(a);
+      gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+      const U = { res: gl.getUniformLocation(prog, 'u_res'), pos: gl.getUniformLocation(prog, 'u_pos'), col: gl.getUniformLocation(prog, 'u_col'), int: gl.getUniformLocation(prog, 'u_int') };
+
+      const hex = (h) => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255);
+      const pos = new Float32Array(12), col = new Float32Array(12), inten = new Float32Array(4);
+      const setBlob = (i, x, y, r, c, k) => { pos.set([x, y, r], i * 3); col.set(c, i * 3); inten[i] = k; };
+      const AMBIENT = [
+        { home: [0.16, 0.86], color: hex('#c084fc'), radius: 0.62, gain: 0.16, cur: [0.16, 0.86] },
+        { home: [0.86, 0.14], color: hex('#38bdf8'), radius: 0.66, gain: 0.15, cur: [0.86, 0.14] },
+      ];
+
+      /* cursor lean (fine pointers only) */
+      let cursor = null;
+      if (matchMedia('(pointer: fine)').matches) {
+        addEventListener('pointermove', (e) => { cursor = [e.clientX / innerWidth, 1 - e.clientY / innerHeight]; }, { passive: true });
+        addEventListener('pointerleave', () => { cursor = null; });
+      }
+
+      /* card warmth: two colours sampled from the preview, cached per card */
+      const palette = new WeakMap();
+      const sample = (img) => {
+        const w = 24, h = 14, cv = document.createElement('canvas'); cv.width = w; cv.height = h;
+        const cx = cv.getContext('2d', { willReadFrequently: true });
+        try { cx.drawImage(img, 0, 0, w, h); } catch (e) { return null; }
+        const d = cx.getImageData(0, 0, w, h).data;
+        const half = (x0, x1) => {
+          let r = 0, g = 0, b = 0, n = 0;
+          for (let y = 0; y < h; y++) for (let x = x0; x < x1; x++) { const i = (y * w + x) * 4; r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+          return lift([r / n / 255, g / n / 255, b / n / 255]);
+        };
+        return [half(0, w >> 1), half(w >> 1, w)];
+      };
+      /* push the sampled colour toward a luminous, saturated version of itself:
+         a mostly-white or mostly-black screenshot still gives a coloured glow */
+      const lift = ([r, g, b]) => {
+        const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2;
+        let sat = mx === mn ? 0 : (mx - mn) / (1 - Math.abs(2 * l - 1));
+        const h = mx === mn ? 0 : mx === r ? ((g - b) / (mx - mn)) % 6 : mx === g ? (b - r) / (mx - mn) + 2 : (r - g) / (mx - mn) + 4;
+        sat = Math.max(sat, 0.55); const L = 0.62;
+        const C = (1 - Math.abs(2 * L - 1)) * sat, X = C * (1 - Math.abs((h % 2) - 1)), m = L - C / 2;
+        const [R, G, B] = h < 1 ? [C, X, 0] : h < 2 ? [X, C, 0] : h < 3 ? [0, C, X] : h < 4 ? [0, X, C] : h < 5 ? [X, 0, C] : [C, 0, X];
+        return [R + m, G + m, B + m];
+      };
+
+      let warm = { card: null, k: 0, target: 0, colors: null };
+      const cards = document.querySelectorAll('.card');
+      const enter = (card) => {
+        const img = card.querySelector('img');
+        if (!palette.has(card)) palette.set(card, img && img.complete && img.naturalWidth ? sample(img) : null);
+        const colors = palette.get(card);
+        if (!colors) return;
+        warm = { card, k: warm.card === card ? warm.k : 0, target: 1, colors };
+      };
+      const leave = (card) => { if (warm.card === card) warm.target = 0; };
+      const hoverable = matchMedia('(hover: hover)').matches;
+      cards.forEach((card) => {
+        if (hoverable) { card.addEventListener('pointerenter', () => enter(card)); card.addEventListener('pointerleave', () => leave(card)); }
+        card.addEventListener('focus', () => enter(card));
+        card.addEventListener('blur', () => leave(card));
+      });
+
+      /* sizing: a third of CSS pixels is plenty for soft light */
+      const fit = () => {
+        canvas.width = Math.max(2, Math.round(innerWidth / 3));
+        canvas.height = Math.max(2, Math.round(innerHeight / 3));
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.uniform2f(U.res, canvas.width, canvas.height);
+      };
+      addEventListener('resize', fit, { passive: true });
+      fit();
+
+      const lerp = (a, b, t) => a + (b - a) * t;
+      let t0 = performance.now(), running = false, raf = 0;
+      const frame = (now) => {
+        const t = (now - t0) / 1000;
+        const still = reduceMotion.matches;
+        AMBIENT.forEach((b, i) => {
+          const drift = still ? [0, 0] : [Math.sin(t * 0.11 + i * 2.1) * 0.07, Math.cos(t * 0.085 + i * 1.3) * 0.06];
+          const lean = cursor && !still ? [(cursor[0] - b.home[0]) * 0.14, (cursor[1] - b.home[1]) * 0.14] : [0, 0];
+          const tx = b.home[0] + drift[0] + lean[0], ty = b.home[1] + drift[1] + lean[1];
+          b.cur[0] = lerp(b.cur[0], tx, 0.04); b.cur[1] = lerp(b.cur[1], ty, 0.04);
+          setBlob(i, b.cur[0], b.cur[1], b.radius, b.color, b.gain);
+        });
+        /* warmth eases in over ~0.6 s and out over ~1 s; it follows the card while the page scrolls */
+        warm.k = lerp(warm.k, warm.target, warm.target ? 0.08 : 0.05);
+        if (warm.card && warm.k > 0.002) {
+          const r = warm.card.getBoundingClientRect();
+          const cx = (r.left + r.width / 2) / innerWidth, cy = 1 - (r.top + r.height / 2) / innerHeight;
+          const spread = (r.width / innerWidth) * 0.28;
+          const rad = Math.max(0.26, (r.width / Math.min(innerWidth, innerHeight)) * 0.5);
+          setBlob(2, cx - spread, cy + 0.03, rad, warm.colors[0], 0.24 * warm.k);
+          setBlob(3, cx + spread, cy - 0.03, rad, warm.colors[1], 0.24 * warm.k);
+        } else { inten[2] = 0; inten[3] = 0; if (!warm.target) warm.card = null; }
+        gl.uniform3fv(U.pos, pos); gl.uniform3fv(U.col, col); gl.uniform1fv(U.int, inten);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+        raf = requestAnimationFrame(frame);
+      };
+      const start = () => { if (!running) { running = true; t0 = performance.now() - (t0 ? 0 : 0); raf = requestAnimationFrame(frame); } };
+      const stop = () => { running = false; cancelAnimationFrame(raf); };
+      document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
+      canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop(); document.documentElement.classList.remove('gl'); });
+      canvas.addEventListener('webglcontextrestored', () => { fit(); document.documentElement.classList.add('gl'); start(); });
+
+      document.documentElement.classList.add('gl');
+      start();
+    })();
+
     /* ── Scroll Reveal ── */
     const reveals = document.querySelectorAll('.reveal');
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
-    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
-    reveals.forEach(el => observer.observe(el));
+    if ('IntersectionObserver' in window && !reduceMotion.matches) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      reveals.forEach(el => observer.observe(el));
+    } else {
+      reveals.forEach(el => el.classList.add('visible'));
+    }
 
-    /* ── Title Cycle ── */
+    /* ── Title Cycle (idle while the tab is hidden; no fade under reduced motion) ── */
     const cycleEl = document.getElementById('cycle-text');
     const cycleWords = ['Web Design', 'Frontend', 'Full-stack Web'];
     let cycleIdx = 0;
+    const nextWord = () => { cycleIdx = (cycleIdx + 1) % cycleWords.length; cycleEl.textContent = cycleWords[cycleIdx]; };
     setInterval(() => {
+      if (document.hidden) return;
+      if (reduceMotion.matches) { nextWord(); return; }
       cycleEl.style.opacity = '0';
-      setTimeout(() => {
-        cycleIdx = (cycleIdx + 1) % cycleWords.length;
-        cycleEl.textContent = cycleWords[cycleIdx];
-        cycleEl.style.opacity = '1';
-      }, 500);
+      setTimeout(() => { nextWord(); cycleEl.style.opacity = '1'; }, 500);
     }, 3000);
   </script>
 
