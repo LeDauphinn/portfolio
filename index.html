@@ -118,6 +118,10 @@
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
+    #cycle-text {
+      transition: opacity 0.5s var(--ease);
+      display: inline-block;
+    }
     header .sub {
       margin-top: 8px;
       font-size: clamp(.85rem, 1.1vw, 1rem);
@@ -321,7 +325,7 @@
     <header class="reveal">
       <div class="header-main">
         <span class="label">Selected work</span>
-        <h1>Frontend | Full-stack Web | Web Design <em>Engineer</em></h1>
+        <h1><span id="cycle-text">Web</span> Design <em>Engineer</em></h1>
         <p class="sub">Crafting digital experiences from concept to code.</p>
       </div>
       <a href="https://github.com/LeDauphinn" target="_blank" rel="noopener" class="github-btn" aria-label="GitHub Profile">
@@ -452,6 +456,19 @@
       entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
     reveals.forEach(el => observer.observe(el));
+
+    /* ── Title Cycle ── */
+    const cycleEl = document.getElementById('cycle-text');
+    const cycleWords = ['Web', 'Frontend', 'Full-stack Web'];
+    let cycleIdx = 0;
+    setInterval(() => {
+      cycleEl.style.opacity = '0';
+      setTimeout(() => {
+        cycleIdx = (cycleIdx + 1) % cycleWords.length;
+        cycleEl.textContent = cycleWords[cycleIdx];
+        cycleEl.style.opacity = '1';
+      }, 500);
+    }, 3000);
   </script>
 
 </body>
