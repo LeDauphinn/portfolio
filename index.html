@@ -135,6 +135,19 @@
     }
     .gl .light { opacity: 1; }
     .gl .orb { display: none; }
+    /* Embers: cursor-following motes, drawn on their own full-resolution canvas
+       above the light and below the page. Fine pointers only. */
+    .embers {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 1.6s var(--ease);
+    }
+    .gl.embers-on .embers { opacity: 1; }
 
     /* ───────── GRADIENT ORB (ambient bg, fallback) ───────── */
     .orb {
@@ -555,6 +568,7 @@
 
   <!-- Ambient light: WebGL field when available, CSS orbs otherwise -->
   <canvas class="light" aria-hidden="true"></canvas>
+  <canvas class="embers" aria-hidden="true"></canvas>
   <div class="orb orb--1"></div>
   <div class="orb orb--2"></div>
 
@@ -788,10 +802,15 @@
       ];
 
       /* cursor lean (fine pointers only) */
-      let cursor = null;
-      if (matchMedia('(pointer: fine)').matches) {
-        addEventListener('pointermove', (e) => { cursor = [e.clientX / innerWidth, 1 - e.clientY / innerHeight]; }, { passive: true });
-        addEventListener('pointerleave', () => { cursor = null; });
+      let cursor = null, cursorPx = null;
+      const finePointer = matchMedia('(pointer: fine)').matches;
+      if (finePointer) {
+        addEventListener('pointermove', (e) => {
+          cursor = [e.clientX / innerWidth, 1 - e.clientY / innerHeight];
+          cursorPx = [e.clientX, e.clientY];
+        }, { passive: true });
+        addEventListener('pointerleave', () => { cursor = null; cursorPx = null; });
+        document.addEventListener('mouseleave', () => { cursor = null; cursorPx = null; });
       }
 
       /* card warmth: two colours sampled from the preview, cached per card */
@@ -843,15 +862,182 @@
         canvas.height = Math.max(2, Math.round(innerHeight / 3));
         gl.viewport(0, 0, canvas.width, canvas.height);
         gl.uniform2f(U.res, canvas.width, canvas.height);
+        if (embers) embers.fit();
       };
+      let warmRect = null;
+
+      /* ── Embers ──
+         ~160 motes drift like dust in the light. The cursor is a soft attractor:
+         within reach, a damped spring pulls each mote toward a loose ring around the
+         pointer, a swirl term keeps the ring alive, and a drag term hands the motes
+         part of the cursor's own velocity — so fast strokes leave a wake and a resting
+         cursor gathers a halo. Semi-implicit Euler at a fixed 120 Hz step (accumulated
+         from real time) keeps the motion identical at any refresh rate. Drawn as
+         GPU points with a soft-disc fragment, additive, on a full-resolution canvas. */
+      const makeEmbers = () => {
+        if (!finePointer || reduceMotion.matches) return null;
+        const ec = document.querySelector('.embers');
+        const eg = ec && ec.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: true, premultipliedAlpha: true, powerPreference: 'low-power' });
+        if (!eg) return null;
+        const v = `
+          attribute vec2 a_pos; attribute float a_size; attribute float a_alpha; attribute vec3 a_col;
+          uniform vec2 u_res; uniform float u_dpr;
+          varying float v_alpha; varying vec3 v_col;
+          void main(){
+            vec2 clip = (a_pos / u_res) * 2.0 - 1.0;
+            gl_Position = vec4(clip.x, -clip.y, 0.0, 1.0);
+            gl_PointSize = a_size * u_dpr;
+            v_alpha = a_alpha; v_col = a_col;
+          }`;
+        const f = `
+          precision mediump float;
+          varying float v_alpha; varying vec3 v_col;
+          void main(){
+            float d = length(gl_PointCoord - 0.5) * 2.0;
+            if (d > 1.0) discard;
+            float core = smoothstep(0.38, 0.0, d);           /* bright pin at the centre */
+            float glow = (1.0 - d) * (1.0 - d) * 0.55;       /* soft falloff around it */
+            float a = (core + glow) * v_alpha;
+            gl_FragColor = vec4(v_col * a, a);               /* premultiplied, additive */
+          }`;
+        const mk = (type, src) => { const o = eg.createShader(type); eg.shaderSource(o, src); eg.compileShader(o); return o; };
+        const p = eg.createProgram();
+        eg.attachShader(p, mk(eg.VERTEX_SHADER, v)); eg.attachShader(p, mk(eg.FRAGMENT_SHADER, f));
+        eg.linkProgram(p);
+        if (!eg.getProgramParameter(p, eg.LINK_STATUS)) return null;
+        eg.useProgram(p);
+        eg.enable(eg.BLEND); eg.blendFunc(eg.ONE, eg.ONE_MINUS_SRC_ALPHA);
+        const buf = eg.createBuffer(); eg.bindBuffer(eg.ARRAY_BUFFER, buf);
+        const STRIDE = 7 * 4;
+        const attr = (name, size, off) => { const l = eg.getAttribLocation(p, name); eg.enableVertexAttribArray(l); eg.vertexAttribPointer(l, size, eg.FLOAT, false, STRIDE, off); };
+        attr('a_pos', 2, 0); attr('a_size', 1, 8); attr('a_alpha', 1, 12); attr('a_col', 3, 16);
+        const uRes = eg.getUniformLocation(p, 'u_res'), uDpr = eg.getUniformLocation(p, 'u_dpr');
+
+        const N = 160;
+        const P = new Float32Array(N * 8);   /* x, y, vx, vy, size, phase, hue, twinkle-rate */
+        const VERTS = new Float32Array(N * 2 * 7);
+        const VIOLET = hex('#c084fc'), SKY = hex('#38bdf8');
+        const rnd = (a, b) => a + Math.random() * (b - a);
+        const seed = (i, anywhere) => {
+          const o = i * 8;
+          P[o] = anywhere ? rnd(0, innerWidth) : (Math.random() < 0.5 ? -8 : innerWidth + 8);
+          P[o + 1] = rnd(0, innerHeight);
+          P[o + 2] = rnd(-6, 6); P[o + 3] = rnd(-6, 6);
+          P[o + 4] = rnd(1.4, 3.2);
+          P[o + 5] = rnd(0, Math.PI * 2);
+          P[o + 6] = Math.random();
+          P[o + 7] = rnd(0.6, 1.6);
+        };
+        for (let i = 0; i < N; i++) seed(i, true);
+
+        let dpr = 1, W = innerWidth, H = innerHeight;
+        const fit = () => {
+          dpr = Math.min(devicePixelRatio || 1, 2);
+          W = innerWidth; H = innerHeight;
+          ec.width = Math.round(W * dpr); ec.height = Math.round(H * dpr);
+          eg.viewport(0, 0, ec.width, ec.height);
+          eg.uniform2f(uRes, W, H); eg.uniform1f(uDpr, dpr);
+        };
+        fit();
+
+        /* cursor velocity, smoothed */
+        let cvx = 0, cvy = 0, lastPx = null;
+        const STEP = 1 / 120;
+        let acc = 0, clock = 0;
+        const step = (dt) => {
+          clock += dt;
+          const reach = Math.max(170, Math.min(300, Math.min(W, H) * 0.3));
+          const cx = cursorPx ? cursorPx[0] : 0, cy = cursorPx ? cursorPx[1] : 0;
+          const damp = Math.exp(-2.4 * dt);
+          for (let i = 0; i < N; i++) {
+            const o = i * 8;
+            let x = P[o], y = P[o + 1], vx = P[o + 2], vy = P[o + 3];
+            const ph = P[o + 5];
+            /* ambient drift: slow, individual, faintly buoyant */
+            let ax = Math.sin(clock * 0.35 + ph) * 22 + Math.sin(clock * 0.9 + ph * 2.3) * 8;
+            let ay = Math.cos(clock * 0.28 + ph * 1.7) * 22 - 7;
+            if (cursorPx) {
+              const dx = cx - x, dy = cy - y;
+              const d = Math.hypot(dx, dy) || 0.001;
+              if (d < reach) {
+                const w = 1 - d / reach;               /* 0 at the edge of reach, 1 at the cursor */
+                const ws = w * w * (3 - 2 * w);        /* smoothstep */
+                const nx = dx / d, ny = dy / d;
+                const ring = 34 + P[o + 4] * 9;        /* each mote keeps its own orbit radius */
+                const spring = (d - ring) * 7.5 * ws;  /* damped spring toward the ring */
+                ax += nx * spring; ay += ny * spring;
+                const swirl = 150 * ws;                /* perpendicular push keeps the ring turning */
+                ax += -ny * swirl; ay += nx * swirl;
+                const drag = 4.5 * ws * dt;            /* inherit part of the cursor's velocity → wake */
+                vx += (cvx - vx) * drag; vy += (cvy - vy) * drag;
+              }
+            }
+            vx = (vx + ax * dt) * damp; vy = (vy + ay * dt) * damp;
+            const sp = Math.hypot(vx, vy);
+            if (sp > 1100) { vx *= 1100 / sp; vy *= 1100 / sp; }
+            x += vx * dt; y += vy * dt;
+            /* wrap softly at the edges */
+            if (x < -12) x = W + 10; else if (x > W + 12) x = -10;
+            if (y < -12) y = H + 10; else if (y > H + 12) y = -10;
+            P[o] = x; P[o + 1] = y; P[o + 2] = vx; P[o + 3] = vy;
+          }
+        };
+        const update = (dt) => {
+          /* cursor velocity from the last real frame, low-pass filtered */
+          if (cursorPx && lastPx) {
+            const k = 1 - Math.exp(-dt * 14);
+            cvx += ((cursorPx[0] - lastPx[0]) / dt - cvx) * k;
+            cvy += ((cursorPx[1] - lastPx[1]) / dt - cvy) * k;
+          } else { cvx *= 0.8; cvy *= 0.8; }
+          lastPx = cursorPx ? [cursorPx[0], cursorPx[1]] : null;
+          acc = Math.min(acc + dt, 0.1);
+          while (acc >= STEP) { step(STEP); acc -= STEP; }
+        };
+        const draw = (warmK) => {
+          const reach = Math.max(170, Math.min(300, Math.min(W, H) * 0.3));
+          const cx = cursorPx ? cursorPx[0] : -1e6, cy = cursorPx ? cursorPx[1] : -1e6;
+          let n = 0;
+          for (let i = 0; i < N; i++) {
+            const o = i * 8;
+            const x = P[o], y = P[o + 1], vx = P[o + 2], vy = P[o + 3];
+            const d = Math.hypot(cx - x, cy - y);
+            const near = d < reach ? 1 - d / reach : 0;
+            const tw = 0.62 + 0.38 * Math.sin(clock * P[o + 7] + P[o + 5]);
+            const alpha = (0.28 + 0.5 * near) * tw;
+            const size = (P[o + 4] + near * 1.4) * 4.2;
+            const h = P[o + 6];
+            let r = VIOLET[0] + (SKY[0] - VIOLET[0]) * h, g = VIOLET[1] + (SKY[1] - VIOLET[1]) * h, b = VIOLET[2] + (SKY[2] - VIOLET[2]) * h;
+            /* motes over a warm card take on its colour */
+            if (warmK > 0.01 && warmRect && x > warmRect.left - 80 && x < warmRect.right + 80 && y > warmRect.top - 80 && y < warmRect.bottom + 80) {
+              const wc = warm.colors[h < 0.5 ? 0 : 1];
+              r += (wc[0] - r) * warmK; g += (wc[1] - g) * warmK; b += (wc[2] - b) * warmK;
+            }
+            /* head */
+            VERTS[n++] = x; VERTS[n++] = y; VERTS[n++] = size; VERTS[n++] = alpha; VERTS[n++] = r; VERTS[n++] = g; VERTS[n++] = b;
+            /* short tail: a second, dimmer point trailing the velocity */
+            const sp = Math.hypot(vx, vy), tl = Math.min(1, sp / 500);
+            VERTS[n++] = x - vx * 0.03; VERTS[n++] = y - vy * 0.03; VERTS[n++] = size * 0.8; VERTS[n++] = alpha * 0.45 * tl; VERTS[n++] = r; VERTS[n++] = g; VERTS[n++] = b;
+          }
+          eg.clear(eg.COLOR_BUFFER_BIT);
+          eg.bufferData(eg.ARRAY_BUFFER, VERTS, eg.DYNAMIC_DRAW);
+          eg.drawArrays(eg.POINTS, 0, N * 2);
+        };
+        eg.clearColor(0, 0, 0, 0);
+        document.documentElement.classList.add('embers-on');
+        return { fit, update, draw };
+      };
+      const embers = makeEmbers();
       addEventListener('resize', fit, { passive: true });
       fit();
 
       const lerp = (a, b, t) => a + (b - a) * t;
       let t0 = performance.now(), running = false, raf = 0;
+      let last = 0;
       const frame = (now) => {
         const t = (now - t0) / 1000;
         const still = reduceMotion.matches;
+        const dt = Math.min(0.05, last ? (now - last) / 1000 : 1 / 60);
+        last = now;
         AMBIENT.forEach((b, i) => {
           const drift = still ? [0, 0] : [Math.sin(t * 0.11 + i * 2.1) * 0.07, Math.cos(t * 0.085 + i * 1.3) * 0.06];
           const lean = cursor && !still ? [(cursor[0] - b.home[0]) * 0.14, (cursor[1] - b.home[1]) * 0.14] : [0, 0];
@@ -863,6 +1049,7 @@
         warm.k = lerp(warm.k, warm.target, warm.target ? 0.08 : 0.05);
         if (warm.card && warm.k > 0.002) {
           const r = warm.card.getBoundingClientRect();
+          warmRect = r;
           const cx = (r.left + r.width / 2) / innerWidth, cy = 1 - (r.top + r.height / 2) / innerHeight;
           const spread = (r.width / innerWidth) * 0.28;
           const rad = Math.max(0.26, (r.width / Math.min(innerWidth, innerHeight)) * 0.5);
@@ -871,9 +1058,10 @@
         } else { inten[2] = 0; inten[3] = 0; if (!warm.target) warm.card = null; }
         gl.uniform3fv(U.pos, pos); gl.uniform3fv(U.col, col); gl.uniform1fv(U.int, inten);
         gl.drawArrays(gl.TRIANGLES, 0, 3);
+        if (embers && !still) { embers.update(dt); embers.draw(warm.k); }
         raf = requestAnimationFrame(frame);
       };
-      const start = () => { if (!running) { running = true; t0 = performance.now() - (t0 ? 0 : 0); raf = requestAnimationFrame(frame); } };
+      const start = () => { if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); } };
       const stop = () => { running = false; cancelAnimationFrame(raf); };
       document.addEventListener('visibilitychange', () => document.hidden ? stop() : start());
       canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); stop(); document.documentElement.classList.remove('gl'); });
