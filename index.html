@@ -10,7 +10,7 @@
   <script>document.documentElement.classList.add('js')</script>
   <link rel="preload" href="./assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./assets/fonts/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="./assets/fonts/playfair-display-italic-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./assets/fonts/playfair-display-italic-var-latin.woff2" as="font" type="font/woff2" crossorigin>
   <style>
     /* ───────── FONTS (self-hosted, latin subsets) ───────── */
     @font-face {
@@ -30,9 +30,9 @@
     @font-face {
       font-family: 'Playfair Display';
       font-style: italic;
-      font-weight: 400;
+      font-weight: 400 900;
       font-display: swap;
-      src: url('./assets/fonts/playfair-display-italic-latin.woff2') format('woff2');
+      src: url('./assets/fonts/playfair-display-italic-var-latin.woff2') format('woff2');
     }
     /* Metric-matched local fallbacks: the swap from these to the web fonts
        is near-invisible (values computed from the fonts' hhea/OS2 tables). */
@@ -148,6 +148,17 @@
       transition: opacity 1.6s var(--ease);
     }
     .gl.embers-on .embers { opacity: 1; }
+    /* Decay: the dust of "Engineer". Absolutely positioned at the top of the document so
+       it scrolls with the page, behind the content; only sized while the effect runs. */
+    .decay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 1px;
+      height: 1px;
+      z-index: 0;
+      pointer-events: none;
+    }
 
     /* ───────── GRADIENT ORB (ambient bg, fallback) ───────── */
     .orb {
@@ -218,12 +229,26 @@
       letter-spacing: -.02em;
     }
     header h1 em {
+      /* Tempered steel: bright steel blooming into the oxide colours steel takes as it is
+         heated (pale straw, bronze, a thin band of peacock purple, then blue), in uneven
+         bands like real heat tint, set at 104° so they run parallel to the italic stems.
+         A faint top light gives the metal volume. The decay effect samples these same
+         custom properties, so the gradient is defined only here. */
+      --steel: #ebe8e2 0%, #eee0b4 12%, #e5c27c 25%, #d49b56 37%, #b9773f 46%, #9d5e60 53%, #8b62c2 58%, #607ad6 65%, #5d8fdf 81%, #9cbfe2 100%;
+      --steel-angle: 104deg;
+      --sheen: rgba(255, 255, 255, .14) 0%, rgba(255, 255, 255, 0) 45%, rgba(0, 0, 0, 0) 70%, rgba(0, 0, 0, .14) 100%;
+      padding: 0 .12em;          /* a little more hover area; the margin keeps the layout */
+      margin: 0 -.12em;
       font-style: italic;
-      background: linear-gradient(135deg, #ffffff 0%, #a5a19b 100%);
+      font-weight: 500;
+      background: linear-gradient(180deg, var(--sheen)), linear-gradient(var(--steel-angle), var(--steel));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
+      transition: filter .6s var(--ease);
     }
+    /* Without the decay (no JS or WebGL, or reduced motion) the steel just warms on hover */
+    html:not(.decay-on) header h1 em:hover { filter: brightness(1.12) saturate(1.15); }
     #cycle-text {
       transition: opacity 0.5s var(--ease);
       display: inline-block;
@@ -551,7 +576,7 @@
 
     /* ───────── PRINT ───────── */
     @media print {
-      .orb, body::before { display: none; }
+      .orb, body::before, .light, .embers, .decay { display: none; }
       body { background: #fff; color: #111; }
       :root { --fg: #111; --fg-2: #444; --fg-3: #666; }
       .page { max-width: none; padding: 0; min-height: 0; }
@@ -569,6 +594,7 @@
   <!-- Ambient light: WebGL field when available, CSS orbs otherwise -->
   <canvas class="light" aria-hidden="true"></canvas>
   <canvas class="embers" aria-hidden="true"></canvas>
+  <canvas class="decay" aria-hidden="true"></canvas>
   <div class="orb orb--1"></div>
   <div class="orb orb--2"></div>
 
@@ -746,6 +772,7 @@
 
   <script>
     const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+    let decayBusy = false;   /* "Engineer" is decaying: the embers leave the cursor alone, the title cycle waits */
 
     /* ── Living light ──
        A fragment shader sums four gaussian colour fields over the page background:
@@ -956,7 +983,7 @@
             /* ambient drift: slow, individual, faintly buoyant */
             let ax = Math.sin(clock * 0.35 + ph) * 22 + Math.sin(clock * 0.9 + ph * 2.3) * 8;
             let ay = Math.cos(clock * 0.28 + ph * 1.7) * 22 - 7;
-            if (cursorPx) {
+            if (cursorPx && !decayBusy) {
               const dx = cx - x, dy = cy - y;
               const d = Math.hypot(dx, dy) || 0.001;
               if (d < reach) {
@@ -1071,6 +1098,481 @@
       start();
     })();
 
+    /* ── Decay: "Engineer" ──
+       Hovering the word sets its letters decaying like unstable nuclei. Each letter
+       waits an exponentially distributed time (half-life ≈ 0.4 s, so the order is
+       random), then flashes, fires a particle track in a random direction and recoils
+       against it (momentum is conserved). A decayed letter drifts away from the word,
+       swells, and crumbles into dust made of its own pixels; the dust rises, spreads and
+       cools along the temper scale to grey. Leaving the word pulls every grain home on a
+       critically damped spring while its age runs backwards, then hands the word back
+       to the DOM. At rest the particles are the glyphs' own pixels (same font, same
+       gradient, one point per device pixel), so the handoff both ways is invisible.
+       One WebGL canvas behind the page; the loop only runs while something moves. */
+    (() => {
+      const word = document.querySelector('header h1 em');
+      const canvas = document.querySelector('.decay');
+      if (!word || !canvas || !word.firstChild) return;
+      const gl = canvas.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: true, premultipliedAlpha: true, powerPreference: 'low-power' });
+      if (!gl) return;
+      const VS = `
+        attribute vec2 a_pos; attribute float a_size; attribute vec4 a_col;
+        uniform vec2 u_res;
+        varying vec4 v_col; varying float v_size;
+        void main(){
+          vec2 c = a_pos / u_res * 2.0 - 1.0;
+          gl_Position = vec4(c.x, -c.y, 0.0, 1.0);
+          gl_PointSize = a_size;
+          v_col = a_col; v_size = a_size;
+        }`;
+      const FS = `
+        precision mediump float;
+        varying vec4 v_col; varying float v_size;
+        void main(){
+          /* one-pixel grains stay square (they are the glyph's own pixels);
+             grains that have grown become soft discs */
+          float k = clamp((v_size - 1.4) / 2.2, 0.0, 1.0);
+          float d = length(gl_PointCoord - 0.5) * 2.0;
+          float a = v_col.a * mix(1.0, 1.0 - smoothstep(0.25, 1.0, d), k);
+          if (a < 0.002) discard;
+          gl_FragColor = vec4(v_col.rgb * a, a);
+        }`;
+      const shader = (type, src) => { const o = gl.createShader(type); gl.shaderSource(o, src); gl.compileShader(o); return o; };
+      const prog = gl.createProgram();
+      gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS));
+      gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS));
+      gl.linkProgram(prog);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+      gl.useProgram(prog);
+      gl.enable(gl.BLEND);
+      gl.clearColor(0, 0, 0, 0);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      const attr = (name, n, off) => { const l = gl.getAttribLocation(prog, name); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, n, gl.FLOAT, false, 28, off); };
+      attr('a_pos', 2, 0); attr('a_size', 1, 8); attr('a_col', 4, 12);
+      const uRes = gl.getUniformLocation(prog, 'u_res');
+
+      const rnd = (a, b) => a + Math.random() * (b - a);
+      const expo = (half) => -Math.log(1 - Math.random()) * half / Math.LN2;   /* waiting time of a decay */
+      const hash = (x, y) => { const h = Math.sin(x * 127.1 + y * 311.7) * 43758.5453; return h - Math.floor(h); };
+      const noise = (x, y) => {
+        const xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+        const u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+        const a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+        return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v;
+      };
+      const HALF_FIRST = 0.42, HALF_CHAIN = 0.5;
+      const ASH = [0.56, 0.59, 0.63];      /* steel heated past blue goes a dull grey */
+      const WARM = [1, 0.95, 0.84];        /* the hot head of a track */
+
+      /* The CSS gradient (custom properties on the em) is the single source of truth;
+         this rebuilds it on the sampling canvas with the spec's gradient-line geometry. */
+      const cssGradient = (ctx, box, stops, deg) => {
+        const A = deg * Math.PI / 180, dx = Math.sin(A), dy = -Math.cos(A);
+        const len = Math.abs(box.w * dx) + Math.abs(box.h * dy), cx = box.l + box.w / 2, cy = box.t + box.h / 2;
+        const g = ctx.createLinearGradient(cx - dx * len / 2, cy - dy * len / 2, cx + dx * len / 2, cy + dy * len / 2);
+        const re = /(#[0-9a-f]{3,8}|rgba?\([^)]*\))\s+(-?[\d.]+)%/gi;
+        for (let m; (m = re.exec(stops));) g.addColorStop(Math.min(1, Math.max(0, parseFloat(m[2]) / 100)), m[1]);
+        return g;
+      };
+
+      /* grains (structure of arrays) and letters */
+      let N = 0, LN = 0, dpr = 1, fsz = 40, turb = 0, buoy = 0, R = 0, V = null, builtAt = null;
+      let x, y, vx, vy, hx, hy, cr, cg, cb, a0, tau, age, drag, grow, fade, floor, omega, phase, scx, scy, li, det;
+      let lcx, lcy, lox, loy, lvx, lvy, ls, lsT, lang, lw, lux, luy, le, ler, lfl, lnext, lev, lchain, lph, lsz, lcos, lsin, ljx, ljy, lr, lg, lb;
+
+      /* particle tracks */
+      const TRACKS = 24, TR = 26, TRACK_PTS = 1800;
+      const trkX = new Float32Array(TRACKS), trkY = new Float32Array(TRACKS), trkVX = new Float32Array(TRACKS), trkVY = new Float32Array(TRACKS);
+      const trkLife = new Float32Array(TRACKS).fill(-9), trkMax = new Float32Array(TRACKS), trkCurl = new Float32Array(TRACKS), trkDrag = new Float32Array(TRACKS);
+      const trkSize = new Float32Array(TRACKS), trkR = new Float32Array(TRACKS), trkG = new Float32Array(TRACKS), trkB = new Float32Array(TRACKS);
+      const trkPath = new Float32Array(TRACKS * TR * 2), trkHead = new Int16Array(TRACKS), trkCount = new Int16Array(TRACKS);
+
+      const build = () => {
+        dpr = Math.min(devicePixelRatio || 1, 3);
+        const cs = getComputedStyle(word);
+        fsz = parseFloat(cs.fontSize);
+        turb = fsz * 0.55; buoy = fsz * 0.45; R = fsz * 4.5;
+        const node = word.firstChild, text = node.textContent, sx = scrollX, sy = scrollY;
+        const er = word.getBoundingClientRect();
+        const box = { l: er.left + sx, t: er.top + sy, w: er.width, h: er.height };
+        builtAt = [box.l, box.t, box.w, devicePixelRatio];
+        /* the baseline exactly as laid out: a zero-size inline-block sits on it */
+        const probe = document.createElement('span');
+        probe.style.cssText = 'display:inline-block;width:0;height:0;vertical-align:baseline';
+        word.appendChild(probe);
+        const base = probe.getBoundingClientRect().top + sy;
+        probe.remove();
+        /* each letter's pen position from the live layout (kerning and tracking included) */
+        const range = document.createRange(), glyphs = [];
+        for (let k = 0; k < text.length; k++) {
+          if (!text[k].trim()) continue;
+          range.setStart(node, k); range.setEnd(node, k + 1);
+          const r = range.getBoundingClientRect();
+          glyphs.push({ ch: text[k], l: r.left + sx, r: r.right + sx });
+        }
+        LN = glyphs.length;
+        if (!LN) return false;
+        const pad = fsz * 0.5;
+        const X0 = Math.floor((glyphs[0].l - pad) * dpr), X1 = Math.ceil((glyphs[LN - 1].r + pad) * dpr);
+        const Y0 = Math.floor((base - fsz * 1.2) * dpr), Y1 = Math.ceil((base + fsz * 0.6) * dpr);
+        const cw = X1 - X0, ch = Y1 - Y0;
+        const oc = document.createElement('canvas');
+        oc.width = cw; oc.height = ch;
+        const ctx = oc.getContext('2d', { willReadFrequently: true });
+        const steel = cssGradient(ctx, box, cs.getPropertyValue('--steel'), parseFloat(cs.getPropertyValue('--steel-angle')) || 104);
+        const sheen = cssGradient(ctx, box, cs.getPropertyValue('--sheen'), 180);
+        const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        const buf = [];
+        glyphs.forEach((gph, i) => {
+          ctx.setTransform(1, 0, 0, 1, 0, 0);
+          ctx.clearRect(0, 0, cw, ch);
+          ctx.setTransform(dpr, 0, 0, dpr, -X0, -Y0);   /* page CSS px → sampling pixels */
+          ctx.font = font; ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.fillStyle = steel; ctx.fillText(gph.ch, gph.l, base);
+          ctx.globalCompositeOperation = 'source-atop';
+          ctx.fillStyle = sheen; ctx.fillRect(box.l - pad, box.t - pad, box.w + pad * 2, box.h + pad * 2);
+          const gx0 = Math.max(0, Math.floor((gph.l - pad) * dpr) - X0), gx1 = Math.min(cw, Math.ceil((gph.r + pad) * dpr) - X0), gw = gx1 - gx0;
+          const d = ctx.getImageData(gx0, 0, gw, ch).data;
+          for (let yy = 0; yy < ch; yy++) for (let xx = 0; xx < gw; xx++) {
+            const o = (yy * gw + xx) * 4;
+            if (d[o + 3] < 5) continue;
+            buf.push(i, (X0 + gx0 + xx + 0.5) / dpr, (Y0 + yy + 0.5) / dpr, d[o] / 255, d[o + 1] / 255, d[o + 2] / 255, d[o + 3] / 255);
+          }
+        });
+        N = buf.length / 7;
+        if (N < 50) return false;
+        const F = () => new Float32Array(N);
+        x = F(); y = F(); vx = F(); vy = F(); hx = F(); hy = F(); cr = F(); cg = F(); cb = F(); a0 = F();
+        tau = F(); age = F(); drag = F(); grow = F(); fade = F(); floor = F(); omega = F(); phase = F(); scx = F(); scy = F();
+        li = new Uint8Array(N); det = new Uint8Array(N);
+        const G = () => new Float32Array(LN);
+        lcx = G(); lcy = G(); lox = G(); loy = G(); lvx = G(); lvy = G(); ls = G(); lsT = G(); lang = G(); lw = G();
+        lux = G(); luy = G(); le = G(); ler = G(); lfl = G(); lph = G(); lsz = G(); lcos = G(); lsin = G(); ljx = G(); ljy = G();
+        lr = G(); lg = G(); lb = G();
+        lnext = new Float64Array(LN); lev = new Uint8Array(LN); lchain = new Uint8Array(LN);
+        const x0 = G().fill(1e9), x1 = G().fill(-1e9), y0 = G().fill(1e9), y1 = G().fill(-1e9), wsum = G();
+        for (let p = 0, o = 0; p < N; p++, o += 7) {
+          const i = buf[o];
+          li[p] = i;
+          hx[p] = buf[o + 1]; hy[p] = buf[o + 2];
+          cr[p] = buf[o + 3]; cg[p] = buf[o + 4]; cb[p] = buf[o + 5]; a0[p] = buf[o + 6];
+          x0[i] = Math.min(x0[i], hx[p]); x1[i] = Math.max(x1[i], hx[p]);
+          y0[i] = Math.min(y0[i], hy[p]); y1[i] = Math.max(y1[i], hy[p]);
+          lr[i] += cr[p] * a0[p]; lg[i] += cg[p] * a0[p]; lb[i] += cb[p] * a0[p]; wsum[i] += a0[p];
+        }
+        let wx0 = 1e9, wx1 = -1e9;
+        for (let i = 0; i < LN; i++) {
+          lcx[i] = (x0[i] + x1[i]) / 2; lcy[i] = (y0[i] + y1[i]) / 2;
+          const w = wsum[i] || 1;
+          lr[i] /= w; lg[i] /= w; lb[i] /= w;
+          wx0 = Math.min(wx0, x0[i]); wx1 = Math.max(wx1, x1[i]);
+        }
+        const wcx = (wx0 + wx1) / 2, half = Math.max(1, (wx1 - wx0) / 2);
+        for (let i = 0; i < LN; i++) {
+          /* each letter leaves the word outward and upward, a little at random */
+          const ux = (lcx[i] - wcx) / half * 0.9 + rnd(-0.35, 0.35);
+          const uy = rnd(-1, -0.15);
+          const m = Math.hypot(ux, uy) || 1;
+          lux[i] = ux / m; luy[i] = uy / m;
+          lsT[i] = rnd(1.5, 2.2); lchain[i] = 2 + Math.floor(Math.random() * 3); ler[i] = rnd(0.36, 0.55);
+          lph[i] = Math.random() * 6.2832;
+        }
+        for (let p = 0; p < N; p++) {
+          const i = li[p];
+          /* when a grain breaks off: in patches (value noise), the outward-facing side
+             and the soft edges first — erosion, not a uniform fade */
+          const n = 0.65 * noise(hx[p] * 0.11, hy[p] * 0.11) + 0.35 * noise(hx[p] * 0.29 + 17.3, hy[p] * 0.29 + 5.1);
+          const q = ((hx[p] - lcx[i]) * lux[i] + (hy[p] - lcy[i]) * luy[i]) / fsz;
+          tau[p] = Math.min(1.08, Math.max(0.02, 0.1 + 0.6 * n + 0.2 * Math.random() - 0.45 * q + 0.1 * a0[p]));
+          drag[p] = rnd(0.9, 1.8); grow[p] = rnd(1, 3.6) * dpr; fade[p] = rnd(0.8, 1.9);
+          floor[p] = Math.random() < 0.32 ? rnd(0.1, 0.3) : 0;
+          omega[p] = rnd(6.5, 11.5); phase[p] = Math.random() * 6.2832; scx[p] = rnd(-1, 1); scy[p] = rnd(-1, 1);
+        }
+        V = new Float32Array((N + TRACK_PTS) * 7);
+        return true;
+      };
+
+      /* the canvas covers the top of the document, sized only while in use */
+      const sizeCanvas = () => {
+        const bottom = word.closest('header').getBoundingClientRect().bottom + scrollY;
+        const w = Math.round(document.documentElement.clientWidth * dpr);
+        const h = Math.round(Math.min(document.documentElement.scrollHeight, bottom + fsz * 6) * dpr);
+        canvas.width = w; canvas.height = h;
+        canvas.style.width = w / dpr + 'px'; canvas.style.height = h / dpr + 'px';
+        gl.viewport(0, 0, w, h);
+        gl.uniform2f(uRes, w / dpr, h / dpr);
+      };
+      const release = () => { canvas.width = canvas.height = 1; canvas.style.width = canvas.style.height = '1px'; };
+
+      const rest = () => {
+        for (let p = 0; p < N; p++) { x[p] = hx[p]; y[p] = hy[p]; vx[p] = vy[p] = age[p] = det[p] = 0; }
+        for (let i = 0; i < LN; i++) {
+          lox[i] = loy[i] = lvx[i] = lvy[i] = lang[i] = lw[i] = le[i] = lfl[i] = ljx[i] = ljy[i] = lsin[i] = lev[i] = 0;
+          ls[i] = lcos[i] = lsz[i] = 1; lnext[i] = Infinity;
+        }
+        trkLife.fill(-9);
+      };
+      const arm = () => {
+        for (let i = 0; i < LN; i++) lnext[i] = lev[i] === 0 ? clock + expo(HALF_FIRST) : lev[i] < lchain[i] ? clock + expo(HALF_CHAIN) : Infinity;
+      };
+
+      const spawnTrack = (i, dx, dy) => {
+        let q = 0;
+        while (q < TRACKS && trkLife[q] >= -0.4) q++;
+        if (q === TRACKS) return;
+        const beta = Math.random() < 0.4;   /* long curling tracks, or short straight ones */
+        const sp = fsz * (beta ? rnd(8, 11) : rnd(7, 10));
+        trkX[q] = lcx[i] + lox[i]; trkY[q] = lcy[i] + loy[i];
+        trkVX[q] = dx * sp; trkVY[q] = dy * sp;
+        trkLife[q] = trkMax[q] = beta ? rnd(0.3, 0.42) : rnd(0.2, 0.3);
+        trkCurl[q] = beta ? rnd(4, 8) * (Math.random() < 0.5 ? -1 : 1) : 0;
+        trkDrag[q] = beta ? 1.4 : 3.8;
+        trkSize[q] = (beta ? 2.2 : 3) * dpr;
+        trkR[q] = lr[i] + (1 - lr[i]) * 0.45; trkG[q] = lg[i] + (1 - lg[i]) * 0.45; trkB[q] = lb[i] + (1 - lb[i]) * 0.45;
+        trkPath[q * TR * 2] = trkX[q]; trkPath[q * TR * 2 + 1] = trkY[q];
+        trkHead[q] = 1; trkCount[q] = 1;
+      };
+      const fire = (i) => {
+        lev[i]++; lfl[i] = 1;
+        const th = Math.random() * 6.2832, dx = Math.cos(th), dy = Math.sin(th);
+        spawnTrack(i, dx, dy);
+        /* the letter recoils against what it emitted, and picks up a little spin */
+        const kick = fsz * rnd(0.8, 1.4);
+        lvx[i] -= dx * kick; lvy[i] -= dy * kick; lw[i] += rnd(-1.2, 1.2);
+        le[i] = Math.min(1.1, le[i] + rnd(0.1, 0.22));
+        lnext[i] = lev[i] < lchain[i] ? clock + expo(HALF_CHAIN) : Infinity;
+      };
+
+      const stepLetters = (dt) => {
+        const glow = Math.exp(-dt / 0.09);
+        for (let i = 0; i < LN; i++) {
+          if (mode === 1 && clock >= lnext[i]) fire(i);
+          if (mode === 1 && lev[i] > 0) {
+            /* decayed: drift outward, coast after each recoil, swell, keep crumbling */
+            lvx[i] += lux[i] * fsz * 0.6 * dt; lvy[i] += (luy[i] * 0.6 - 0.1) * fsz * dt;
+            const k = 1 - 1.6 * dt;
+            lvx[i] *= k; lvy[i] *= k;
+            lox[i] += lvx[i] * dt; loy[i] += lvy[i] * dt;
+            /* the baseline is a floor: a letter kicked downward bounces instead of
+               sinking onto the line below */
+            if (loy[i] > 0.25 * fsz) { loy[i] = 0.25 * fsz; if (lvy[i] > 0) lvy[i] *= -0.4; }
+            ls[i] += (lsT[i] - ls[i]) * 0.7 * dt;
+            lw[i] *= 1 - 1.8 * dt; lang[i] += lw[i] * dt;
+            le[i] += ler[i] * dt;
+            ljx[i] = ljy[i] = 0;
+          } else if (mode === 1) {
+            /* not decayed yet: a faint tremor, the nucleus is unstable */
+            ljx[i] = 0.35 * Math.sin(clock * 47 + lph[i]); ljy[i] = 0.35 * Math.cos(clock * 39 + lph[i] * 1.7);
+          } else {
+            /* restoring: the letter's body springs home */
+            const w = 9;
+            lvx[i] += (-w * w * lox[i] - 2 * w * lvx[i]) * dt; lvy[i] += (-w * w * loy[i] - 2 * w * lvy[i]) * dt;
+            lox[i] += lvx[i] * dt; loy[i] += lvy[i] * dt;
+            const e = 1 - Math.exp(-dt * 8);
+            ls[i] += (1 - ls[i]) * e; lang[i] -= lang[i] * e; lw[i] = ljx[i] = ljy[i] = 0;
+          }
+          lfl[i] *= glow;
+          lcos[i] = Math.cos(lang[i]); lsin[i] = Math.sin(lang[i]);
+          lsz[i] = Math.max(1, Math.pow(ls[i], 0.7));
+        }
+      };
+
+      const stepDust = (dt) => {
+        let home = true;
+        const R2 = R * R;
+        for (let p = 0; p < N; p++) {
+          const i = li[p];
+          if (mode === 1 && !det[p] && tau[p] < le[i]) {
+            /* this grain breaks off, flung outward from the letter's centre */
+            det[p] = 1; age[p] = 0;
+            const dx = x[p] - lcx[i] - lox[i], dy = y[p] - lcy[i] - loy[i], d = Math.hypot(dx, dy) || 1, s = fsz * rnd(0.25, 1.35);
+            vx[p] += dx / d * s + rnd(-0.25, 0.25) * fsz;
+            vy[p] += dy / d * s + rnd(-0.25, 0.25) * fsz - 0.2 * fsz;
+          }
+          if (!det[p]) {
+            /* still part of its letter: rides the letter's position, scale and spin; as the
+               letter swells its grains loosen, so it turns porous instead of a pixel grid */
+            const loose = (ls[i] - 1) * 1.5;
+            const ox = (hx[p] - lcx[i]) * ls[i] + scx[p] * loose, oy = (hy[p] - lcy[i]) * ls[i] + scy[p] * loose;
+            const nx = lcx[i] + lox[i] + ox * lcos[i] - oy * lsin[i] + ljx[i];
+            const ny = lcy[i] + loy[i] + ox * lsin[i] + oy * lcos[i] + ljy[i];
+            vx[p] = (nx - x[p]) / dt; vy[p] = (ny - y[p]) / dt;
+            x[p] = nx; y[p] = ny;
+          } else if (mode === 1) {
+            /* dust: turbulent, buoyant while young, dragged, loosely tethered to the word */
+            const ag = (age[p] += dt), f = Math.exp(-ag / 2.4), t = turb * (0.45 + 0.55 * f);
+            let ax = t * Math.sin(y[p] * 0.045 + clock * 1.3 + phase[p]);
+            let ay = t * Math.cos(x[p] * 0.04 - clock * 1.1 + phase[p]) - buoy * f;
+            const dx = x[p] - hx[p], dy = y[p] - hy[p], d2 = dx * dx + dy * dy;
+            if (d2 > R2) { const d = Math.sqrt(d2), pull = (d - R) * 3 / d; ax -= dx * pull; ay -= dy * pull; }
+            const k = 1 - drag[p] * dt;
+            vx[p] = (vx[p] + ax * dt) * k; vy[p] = (vy[p] + ay * dt) * k;
+            x[p] += vx[p] * dt; y[p] += vy[p] * dt;
+          } else {
+            /* restoring: a critically damped spring home while its age runs backwards */
+            const w = omega[p];
+            vx[p] += (w * w * (hx[p] - x[p]) - 2 * w * vx[p]) * dt;
+            vy[p] += (w * w * (hy[p] - y[p]) - 2 * w * vy[p]) * dt;
+            x[p] += vx[p] * dt; y[p] += vy[p] * dt;
+            age[p] = Math.max(0, age[p] - dt * (1.5 + 2.2 * age[p]));
+          }
+          if (home && (age[p] > 0 || Math.abs(x[p] - hx[p]) > 0.35 || Math.abs(y[p] - hy[p]) > 0.35)) home = false;
+        }
+        return home;
+      };
+
+      const stepTracks = (dt) => {
+        let alive = false;
+        for (let q = 0; q < TRACKS; q++) {
+          if (trkLife[q] < -0.4) continue;
+          alive = true;
+          if (trkLife[q] > 0) {
+            if (trkCurl[q]) {   /* a charged track curls, as in a cloud chamber's magnetic field */
+              const a = trkCurl[q] * dt, c = Math.cos(a), s = Math.sin(a), ux = trkVX[q];
+              trkVX[q] = ux * c - trkVY[q] * s; trkVY[q] = ux * s + trkVY[q] * c;
+            }
+            const k = 1 - trkDrag[q] * dt;
+            trkVX[q] *= k; trkVY[q] *= k;
+            trkX[q] += trkVX[q] * dt; trkY[q] += trkVY[q] * dt;
+            const o = (q * TR + trkHead[q]) * 2;
+            trkPath[o] = trkX[q]; trkPath[o + 1] = trkY[q];
+            trkHead[q] = (trkHead[q] + 1) % TR;
+            if (trkCount[q] < TR) trkCount[q]++;
+          }
+          trkLife[q] -= dt;
+        }
+        return alive;
+      };
+
+      const draw = () => {
+        let n = 0;
+        for (let p = 0; p < N; p++) {
+          const i = li[p], ag = age[p];
+          let r = cr[p], g = cg[p], b = cb[p], a = a0[p], s = det[p] ? 1 : lsz[i];
+          if (ag > 0) {
+            s = 1 + grow[p] * (1 - Math.exp(-ag / 1.1));
+            a *= (floor[p] + (1 - floor[p]) * Math.exp(-ag / fade[p])) / (1 + 0.22 * (s - 1));
+            const c = 0.6 * (1 - Math.exp(-ag / 1.6));   /* cooling past blue, to grey */
+            r += (ASH[0] - r) * c; g += (ASH[1] - g) * c; b += (ASH[2] - b) * c;
+          }
+          const fl = lfl[i];
+          if (fl > 0.01) { const k = 0.8 * fl; r += (1 - r) * k; g += (1 - g) * k; b += (1 - b) * k; a = Math.min(1, a * (1 + 0.6 * fl)); }
+          if (a < 0.004) continue;
+          V[n++] = x[p]; V[n++] = y[p]; V[n++] = s; V[n++] = r; V[n++] = g; V[n++] = b; V[n++] = a;
+        }
+        const dust = n / 7;
+        /* tracks: a hot head, and a vapour trail that lingers a moment after it */
+        let cap = TRACK_PTS;
+        for (let q = 0; q < TRACKS && cap > 0; q++) {
+          if (trkLife[q] < -0.4) continue;
+          const live = trkLife[q] > 0, trail = 0.5 * (live ? 1 : 1 + trkLife[q] / 0.4);
+          if (live) {
+            V[n++] = trkX[q]; V[n++] = trkY[q]; V[n++] = trkSize[q];
+            V[n++] = WARM[0]; V[n++] = WARM[1]; V[n++] = WARM[2]; V[n++] = 0.95 * Math.sqrt(trkLife[q] / trkMax[q]);
+            cap--;
+          }
+          for (let k = 0; k < trkCount[q] - 1 && cap > 0; k++) {
+            const o0 = (q * TR + (trkHead[q] - 1 - k + TR) % TR) * 2, o1 = (q * TR + (trkHead[q] - 2 - k + TR) % TR) * 2;
+            const ax = trkPath[o0], ay = trkPath[o0 + 1], bx = trkPath[o1], by = trkPath[o1 + 1];
+            const steps = Math.max(1, Math.ceil(Math.hypot(bx - ax, by - ay) / 1.6));
+            for (let s = 0; s < steps && cap > 0; s++, cap--) {
+              const u = s / steps;
+              V[n++] = ax + (bx - ax) * u; V[n++] = ay + (by - ay) * u; V[n++] = 1.8 * dpr;
+              V[n++] = trkR[q]; V[n++] = trkG[q]; V[n++] = trkB[q]; V[n++] = trail * Math.pow(1 - (k + u) / TR, 1.4);
+            }
+          }
+        }
+        const tracks = n / 7 - dust;
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.bufferData(gl.ARRAY_BUFFER, V.subarray(0, n), gl.DYNAMIC_DRAW);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+        if (dust) gl.drawArrays(gl.POINTS, 0, dust);
+        if (tracks) { gl.blendFunc(gl.ONE, gl.ONE); gl.drawArrays(gl.POINTS, dust, tracks); }
+      };
+
+      /* mode: 0 idle · 1 decaying · 2 restoring · 3 handing back (the text fades in over the
+         resting particles, then the canvas goes, so no sub-pixel difference can show) */
+      let mode = 0, running = false, raf = 0, last = 0, clock = 0, hideDom = false, hovering = false, ticket = 0;
+      let restoreAt = 0, handAt = 0;
+      const frame = (now) => {
+        const dt = Math.max(1 / 240, Math.min(1 / 30, last ? (now - last) / 1000 : 1 / 60));
+        last = now; clock += dt;
+        if (mode === 3) { if (now - handAt > 240) finish(); else raf = requestAnimationFrame(frame); return; }
+        stepLetters(dt);
+        const home = stepDust(dt);
+        const tracking = stepTracks(dt);
+        /* settled, or (safety net) a restore that somehow never settles */
+        const handBack = mode === 2 && ((home && !tracking) || clock - restoreAt > 4);
+        if (handBack) rest();
+        draw();
+        if (hideDom) { word.style.transition = 'none'; word.style.opacity = '0'; hideDom = false; }
+        if (handBack) { word.style.transition = 'opacity .22s ease-out'; word.style.opacity = ''; mode = 3; handAt = now; }
+        raf = requestAnimationFrame(frame);
+      };
+      const start = () => { if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); } };
+      const finish = () => {
+        running = false; cancelAnimationFrame(raf);
+        mode = 0; decayBusy = false; hideDom = false;
+        word.style.transition = word.style.opacity = '';
+        release();
+      };
+      /* don't sample while the header is still sliding in (its reveal transform) */
+      const laidOut = () => { const t = getComputedStyle(word.closest('header')).transform; return t === 'none' || t === 'matrix(1, 0, 0, 1, 0, 0)'; };
+
+      const enter = () => {
+        hovering = true;
+        if (reduceMotion.matches || mode === 1) return;
+        decayBusy = true;
+        if (mode) {                  /* back on the word mid-restore: decay resumes from here */
+          if (mode === 3) hideDom = true;
+          mode = 1; arm(); start();
+          return;
+        }
+        if (!laidOut()) { setTimeout(() => { if (hovering && !mode) enter(); }, 150); return; }
+        const t = ++ticket, cs = getComputedStyle(word);
+        const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        (document.fonts ? document.fonts.load(font) : Promise.resolve()).then(() => {
+          if (t !== ticket || !hovering || mode) return;
+          if (!build()) { decayBusy = false; return; }
+          sizeCanvas(); rest(); arm();
+          mode = 1; hideDom = true; start();
+        });
+      };
+      const leave = () => {
+        hovering = false; ticket++;
+        if (mode === 1) { mode = 2; restoreAt = clock; }
+        else if (!mode) decayBusy = false;
+      };
+
+      let lastType = 'mouse', auto = 0;
+      word.addEventListener('pointerdown', (e) => { lastType = e.pointerType; }, { passive: true });
+      word.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') enter(); });
+      word.addEventListener('pointerleave', (e) => { if (e.pointerType === 'mouse') leave(); });
+      /* touch has no hover: a tap sets it off, another tap (or a few seconds) brings it back */
+      word.addEventListener('click', () => {
+        if (lastType === 'mouse') return;
+        clearTimeout(auto);
+        if (mode === 1) { leave(); return; }
+        enter();
+        auto = setTimeout(leave, 4200);
+      });
+      /* only a real layout change ends it early; a phone's URL bar sliding away (a resize
+         that moves nothing) must not snap the dust back */
+      const moved = () => {
+        const r = word.getBoundingClientRect(), b = builtAt;
+        return !b || Math.abs(r.left + scrollX - b[0]) > 0.5 || Math.abs(r.top + scrollY - b[1]) > 0.5 || Math.abs(r.width - b[2]) > 0.5 || devicePixelRatio !== b[3];
+      };
+      addEventListener('resize', () => { if (mode && moved()) finish(); }, { passive: true });
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver((es) => { if (!es[0].isIntersecting && mode === 1) leave(); }).observe(word);
+      }
+      const sync = () => document.documentElement.classList.toggle('decay-on', !reduceMotion.matches);
+      sync();
+      release();
+      if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', () => { sync(); if (reduceMotion.matches && mode) finish(); });
+    })();
+
     /* ── Scroll Reveal ── */
     const reveals = document.querySelectorAll('.reveal');
     if ('IntersectionObserver' in window && !reduceMotion.matches) {
@@ -1088,7 +1590,7 @@
     let cycleIdx = 0;
     const nextWord = () => { cycleIdx = (cycleIdx + 1) % cycleWords.length; cycleEl.textContent = cycleWords[cycleIdx]; };
     setInterval(() => {
-      if (document.hidden) return;
+      if (document.hidden || decayBusy) return;
       if (reduceMotion.matches) { nextWord(); return; }
       cycleEl.style.opacity = '0';
       setTimeout(() => { nextWord(); cycleEl.style.opacity = '1'; }, 500);
