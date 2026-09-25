@@ -577,8 +577,8 @@
     <!-- ─── HEADER ─── -->
     <header class="reveal">
       <div class="header-main">
-        <h1 aria-label="Web Design, Frontend, Full-stack Web Engineer">
-          <span id="cycle-text" aria-hidden="true">Web Design</span><br>
+        <h1 aria-label="Full-stack Web, Frontend, Web Engineer">
+          <span id="cycle-text" aria-hidden="true">Full-stack Web</span><br>
           <em>Engineer</em>
         </h1>
         <p class="sub">Crafting digital experiences from concept to code.</p>
@@ -1084,7 +1084,7 @@
 
     /* ── Title Cycle (idle while the tab is hidden; no fade under reduced motion) ── */
     const cycleEl = document.getElementById('cycle-text');
-    const cycleWords = ['Web Design', 'Frontend', 'Full-stack Web'];
+    const cycleWords = ['Full-stack Web', 'Frontend', 'Web'];
     let cycleIdx = 0;
     const nextWord = () => { cycleIdx = (cycleIdx + 1) % cycleWords.length; cycleEl.textContent = cycleWords[cycleIdx]; };
     setInterval(() => {
