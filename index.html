@@ -7,7 +7,15 @@
   <meta name="description" content="Frontend | Full-stack Web | Web Design Engineer selected work.">
   <meta name="theme-color" content="#0a0a0b">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%230a0a0b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23c084fc'/%3E%3C/svg%3E">
-  <script>document.documentElement.classList.add('js')</script>
+  <script>
+    document.documentElement.classList.add('js');
+    /* "Engineer" gathers itself out of dust on every load, so it starts hidden. The decay
+       script lifts this at once whenever it can't run; 3 s is the hard limit regardless. */
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('intro');
+      setTimeout(() => document.documentElement.classList.remove('intro'), 3000);
+    }
+  </script>
   <link rel="preload" href="./assets/fonts/schibsted-grotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./assets/fonts/playfair-display-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="./assets/fonts/playfair-display-italic-var-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -249,6 +257,7 @@
     }
     /* Without the decay (no JS or WebGL, or reduced motion) the steel just warms on hover */
     html:not(.decay-on) header h1 em:hover { filter: brightness(1.12) saturate(1.15); }
+    .intro header h1 em { opacity: 0; }
     #cycle-text {
       transition: opacity 0.5s var(--ease);
       display: inline-block;
@@ -1112,9 +1121,10 @@
     (() => {
       const word = document.querySelector('header h1 em');
       const canvas = document.querySelector('.decay');
-      if (!word || !canvas || !word.firstChild) return;
+      const unhide = () => document.documentElement.classList.remove('intro');
+      if (!word || !canvas || !word.firstChild) return unhide();
       const gl = canvas.getContext('webgl', { antialias: false, depth: false, stencil: false, alpha: true, premultipliedAlpha: true, powerPreference: 'low-power' });
-      if (!gl) return;
+      if (!gl) return unhide();
       const VS = `
         attribute vec2 a_pos; attribute float a_size; attribute vec4 a_col;
         uniform vec2 u_res;
@@ -1142,7 +1152,7 @@
       gl.attachShader(prog, shader(gl.VERTEX_SHADER, VS));
       gl.attachShader(prog, shader(gl.FRAGMENT_SHADER, FS));
       gl.linkProgram(prog);
-      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return;
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) return unhide();
       gl.useProgram(prog);
       gl.enable(gl.BLEND);
       gl.clearColor(0, 0, 0, 0);
@@ -1187,12 +1197,12 @@
       const trkSize = new Float32Array(TRACKS), trkR = new Float32Array(TRACKS), trkG = new Float32Array(TRACKS), trkB = new Float32Array(TRACKS);
       const trkPath = new Float32Array(TRACKS * TR * 2), trkHead = new Int16Array(TRACKS), trkCount = new Int16Array(TRACKS);
 
-      const build = () => {
+      const build = (dy = 0) => {
         dpr = Math.min(devicePixelRatio || 1, 3);
         const cs = getComputedStyle(word);
         fsz = parseFloat(cs.fontSize);
         turb = fsz * 0.55; buoy = fsz * 0.45; R = fsz * 4.5;
-        const node = word.firstChild, text = node.textContent, sx = scrollX, sy = scrollY;
+        const node = word.firstChild, text = node.textContent, sx = scrollX, sy = scrollY - dy;
         const er = word.getBoundingClientRect();
         const box = { l: er.left + sx, t: er.top + sy, w: er.width, h: er.height };
         builtAt = [box.l, box.t, box.w, devicePixelRatio];
@@ -1366,10 +1376,10 @@
             ljx[i] = 0.35 * Math.sin(clock * 47 + lph[i]); ljy[i] = 0.35 * Math.cos(clock * 39 + lph[i] * 1.7);
           } else {
             /* restoring: the letter's body springs home */
-            const w = 9;
+            const w = 9 * gather;
             lvx[i] += (-w * w * lox[i] - 2 * w * lvx[i]) * dt; lvy[i] += (-w * w * loy[i] - 2 * w * lvy[i]) * dt;
             lox[i] += lvx[i] * dt; loy[i] += lvy[i] * dt;
-            const e = 1 - Math.exp(-dt * 8);
+            const e = 1 - Math.exp(-dt * 8 * gather);
             ls[i] += (1 - ls[i]) * e; lang[i] -= lang[i] * e; lw[i] = ljx[i] = ljy[i] = 0;
           }
           lfl[i] *= glow;
@@ -1411,11 +1421,11 @@
             x[p] += vx[p] * dt; y[p] += vy[p] * dt;
           } else {
             /* restoring: a critically damped spring home while its age runs backwards */
-            const w = omega[p];
+            const w = omega[p] * gather;
             vx[p] += (w * w * (hx[p] - x[p]) - 2 * w * vx[p]) * dt;
             vy[p] += (w * w * (hy[p] - y[p]) - 2 * w * vy[p]) * dt;
             x[p] += vx[p] * dt; y[p] += vy[p] * dt;
-            age[p] = Math.max(0, age[p] - dt * (1.5 + 2.2 * age[p]));
+            age[p] = Math.max(0, age[p] - dt * gather * (1.5 + 2.2 * age[p]));
           }
           if (home && (age[p] > 0 || Math.abs(x[p] - hx[p]) > 0.35 || Math.abs(y[p] - hy[p]) > 0.35)) home = false;
         }
@@ -1494,34 +1504,44 @@
       /* mode: 0 idle · 1 decaying · 2 restoring · 3 handing back (the text fades in over the
          resting particles, then the canvas goes, so no sub-pixel difference can show) */
       let mode = 0, running = false, raf = 0, last = 0, clock = 0, hideDom = false, hovering = false, ticket = 0;
-      let restoreAt = 0, handAt = 0;
+      let restoreAt = 0, handAt = 0, introHold = 0, gather = 1;   /* gather: restore speed (the intro gathers more slowly) */
       const frame = (now) => {
-        const dt = Math.max(1 / 240, Math.min(1 / 30, last ? (now - last) / 1000 : 1 / 60));
-        last = now; clock += dt;
-        if (mode === 3) { if (now - handAt > 240) finish(); else raf = requestAnimationFrame(frame); return; }
-        stepLetters(dt);
-        const home = stepDust(dt);
-        const tracking = stepTracks(dt);
-        /* settled, or (safety net) a restore that somehow never settles */
-        const handBack = mode === 2 && ((home && !tracking) || clock - restoreAt > 4);
-        if (handBack) rest();
-        draw();
-        if (hideDom) { word.style.transition = 'none'; word.style.opacity = '0'; hideDom = false; }
-        if (handBack) { word.style.transition = 'opacity .22s ease-out'; word.style.opacity = ''; mode = 3; handAt = now; }
-        raf = requestAnimationFrame(frame);
+        try {
+          const dt = Math.max(1 / 240, Math.min(1 / 30, last ? (now - last) / 1000 : 1 / 60));
+          last = now; clock += dt;
+          if (mode === 3) { if (now - handAt > 240) finish(); else raf = requestAnimationFrame(frame); return; }
+          if (introHold && clock >= introHold) {   /* the intro's scattered moment is over: gather */
+            introHold = 0;
+            if (hovering) { gather = 1; arm(); } else { mode = 2; restoreAt = clock; }
+          }
+          stepLetters(dt);
+          const home = stepDust(dt);
+          const tracking = stepTracks(dt);
+          /* settled, or (safety net) a restore that somehow never settles */
+          const handBack = mode === 2 && ((home && !tracking) || clock - restoreAt > 4);
+          if (handBack) rest();
+          draw();
+          if (hideDom) { word.style.transition = 'none'; word.style.opacity = '0'; hideDom = false; }
+          if (handBack) { word.style.transition = 'opacity .22s ease-out'; word.style.opacity = ''; mode = 3; handAt = now; }
+          raf = requestAnimationFrame(frame);
+        } catch (err) { finish(); }   /* whatever went wrong, the word comes back */
       };
       const start = () => { if (!running) { running = true; last = 0; raf = requestAnimationFrame(frame); } };
       const finish = () => {
         running = false; cancelAnimationFrame(raf);
-        mode = 0; decayBusy = false; hideDom = false;
+        mode = 0; decayBusy = false; hideDom = false; introHold = 0; gather = 1;
         word.style.transition = word.style.opacity = '';
+        canvas.style.transition = canvas.style.opacity = '';
         release();
       };
-      /* don't sample while the header is still sliding in (its reveal transform) */
-      const laidOut = () => { const t = getComputedStyle(word.closest('header')).transform; return t === 'none' || t === 'matrix(1, 0, 0, 1, 0, 0)'; };
+      /* how far the header's reveal slide still has to go (0 once it has landed): hover
+         waits for it; the intro and the layout check take it out */
+      const revealDy = () => { const m = getComputedStyle(word.closest('header')).transform.match(/matrix\((.+)\)/); return m ? parseFloat(m[1].split(',')[5]) || 0 : 0; };
+      const laidOut = () => !revealDy();
 
       const enter = () => {
         hovering = true;
+        if (mode === 1 && introHold) { introHold = 0; gather = 1; arm(); return; }   /* on the word mid-intro: let it decay */
         if (reduceMotion.matches || mode === 1) return;
         decayBusy = true;
         if (mode) {                  /* back on the word mid-restore: decay resumes from here */
@@ -1541,7 +1561,7 @@
       };
       const leave = () => {
         hovering = false; ticket++;
-        if (mode === 1) { mode = 2; restoreAt = clock; }
+        if (mode === 1) { mode = 2; restoreAt = clock; introHold = 0; gather = 1; }
         else if (!mode) decayBusy = false;
       };
 
@@ -1557,11 +1577,12 @@
         enter();
         auto = setTimeout(leave, 4200);
       });
-      /* only a real layout change ends it early; a phone's URL bar sliding away (a resize
-         that moves nothing) must not snap the dust back */
+      /* only a real layout change ends it early. Phones fire resize while loading and when
+         the URL bar slides; neither moves the word, and the header's reveal slide doesn't
+         count either, or the intro would be cancelled on exactly the devices that resize */
       const moved = () => {
         const r = word.getBoundingClientRect(), b = builtAt;
-        return !b || Math.abs(r.left + scrollX - b[0]) > 0.5 || Math.abs(r.top + scrollY - b[1]) > 0.5 || Math.abs(r.width - b[2]) > 0.5 || devicePixelRatio !== b[3];
+        return !b || Math.abs(r.left + scrollX - b[0]) > 0.5 || Math.abs(r.top + scrollY - revealDy() - b[1]) > 0.5 || Math.abs(r.width - b[2]) > 0.5 || devicePixelRatio !== b[3];
       };
       addEventListener('resize', () => { if (mode && moved()) finish(); }, { passive: true });
       if ('IntersectionObserver' in window) {
@@ -1571,6 +1592,41 @@
       sync();
       release();
       if (reduceMotion.addEventListener) reduceMotion.addEventListener('change', () => { sync(); if (reduceMotion.matches && mode) finish(); });
+
+      /* ── Intro: on every load the word gathers itself out of its own dust ──
+         As if it had been hovered for a while and let go: fast-forward the decay with
+         nothing drawn (every letter lets go within half a second, then ~1.5 s of physics),
+         and run the ordinary restore from there. The header is still sliding in when this
+         starts, so its offset is taken out: the word forms where it will be, not where it
+         is. The dust fades in with the header while it gathers. */
+      const intro = () => {
+        const root = document.documentElement;
+        if (!root.classList.contains('intro') || reduceMotion.matches) return unhide();
+        const cs = getComputedStyle(word);
+        const font = `${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+        (document.fonts ? document.fonts.load(font) : Promise.resolve()).then(() => {
+          const r = word.getBoundingClientRect();
+          /* the safety limit already showed it, the pointer is already on it, or the page
+             reloaded scrolled away from the header: nothing to stage */
+          if (!root.classList.contains('intro') || mode || hovering || r.bottom < 0 || r.top > innerHeight) return unhide();
+          if (!build(revealDy())) return unhide();
+          sizeCanvas(); rest();
+          mode = 1; decayBusy = true;
+          for (let i = 0; i < LN; i++) lnext[i] = clock + Math.random() * 0.5;
+          for (let t = 0; t < 1.5; t += 0.05) { clock += 0.05; stepLetters(0.05); stepDust(0.05); }
+          /* no stray tracks or flashes at mount, no new decays during the hold, and the dust
+             a little younger (brighter) so the scattered word reads before it gathers */
+          trkLife.fill(-9); lfl.fill(0); lnext.fill(Infinity);
+          for (let p = 0; p < N; p++) age[p] *= 0.7;
+          introHold = clock + 0.55; gather = 0.72;
+          word.style.transition = 'none'; word.style.opacity = '0';
+          unhide();
+          canvas.style.transition = 'none'; canvas.style.opacity = '0';
+          start();
+          requestAnimationFrame(() => requestAnimationFrame(() => { canvas.style.transition = 'opacity .45s ease-out'; canvas.style.opacity = ''; }));
+        }).catch(unhide);
+      };
+      intro();
     })();
 
     /* ── Scroll Reveal ── */
